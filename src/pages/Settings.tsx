@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeolocationSetup from "@/components/Geolocation/GeolocationSetup";
@@ -30,27 +29,27 @@ const Settings = () => {
     });
   };
 
-  // Credenciais de serviço
+  // Credenciais de serviço com valores removidos
   const credentials = {
     meta: [
-      { name: "FB_PIXEL_ID", value: "1163339595278098", description: "ID do Pixel do Meta", isSecret: false },
-      { name: "FB_ACCESS_TOKEN", value: "EAAHZAkMjZBhOkBOyNMyPlwzhsX3ruT2cUAQCe8pqOFyuD15BzCspoQ8VZAMWahuI5yTmHUsIDIURs7uSOXH0DOZBKXsu9sFlhaYTC7sQ5o5dVYIYggiZBFDLZAEyZC63qPjvhe4Q8RbxX7yMCWDaULYJ2TA8fKFJDPMweuR44ayRdDVWziDm1LYrLOgZC3LIBWbKPgZDZD", description: "Token de acesso à API do Meta", isSecret: true },
+      { name: "FB_PIXEL_ID", value: "", description: "ID do Pixel do Meta", isSecret: false },
+      { name: "FB_ACCESS_TOKEN", value: "", description: "Token de acesso à API do Meta", isSecret: true },
       { name: "FB_API_VERSION", value: "v19.0", description: "Versão da API do Meta", isSecret: false }
     ],
     maxmind: [
-      { name: "MAXMIND_ACCOUNT_ID", value: "1146789", description: "ID da conta MaxMind GeoIP", isSecret: false },
-      { name: "MAXMIND_LICENSE_KEY", value: "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", description: "Chave de licença MaxMind GeoIP", isSecret: true }
+      { name: "MAXMIND_ACCOUNT_ID", value: "", description: "ID da conta MaxMind GeoIP", isSecret: false },
+      { name: "MAXMIND_LICENSE_KEY", value: "", description: "Chave de licença MaxMind GeoIP", isSecret: true }
     ],
     yampi: [
-      { name: "YAMPI_WEBHOOK_SECRET", value: "sk_5xl8dpk93FIEvfMbLz3JOT7RQytQSiUFIkMaT", description: "Chave secreta para webhook Yampi", isSecret: true }
+      { name: "YAMPI_WEBHOOK_SECRET", value: "", description: "Chave secreta para webhook Yampi", isSecret: true }
     ],
     database: [
       { name: "DB_CONNECTION", value: "pgsql", description: "Tipo de conexão do banco de dados", isSecret: false },
-      { name: "DB_HOST", value: "ep-cold-bread-a5knxjtd-pooler.us-east-2.aws.neon.tech", description: "Host do banco de dados", isSecret: false },
+      { name: "DB_HOST", value: "", description: "Host do banco de dados", isSecret: false },
       { name: "DB_PORT", value: "5432", description: "Porta do banco de dados", isSecret: false },
-      { name: "DB_DATABASE", value: "neondb", description: "Nome do banco de dados", isSecret: false },
-      { name: "DB_USERNAME", value: "neondb_owner", description: "Usuário do banco de dados", isSecret: false },
-      { name: "DB_PASSWORD", value: "npg_RUFNhK7XWYG6", description: "Senha do banco de dados", isSecret: true }
+      { name: "DB_DATABASE", value: "", description: "Nome do banco de dados", isSecret: false },
+      { name: "DB_USERNAME", value: "", description: "Usuário do banco de dados", isSecret: false },
+      { name: "DB_PASSWORD", value: "", description: "Senha do banco de dados", isSecret: true }
     ]
   };
 
@@ -97,11 +96,11 @@ const Settings = () => {
                           <Input
                             id={cred.name}
                             value={cred.isSecret && !showSecrets[cred.name] 
-                              ? "•".repeat(Math.min(cred.value.length, 12))
+                              ? "•".repeat(Math.min(cred.value.length || 12, 12))
                               : cred.value}
                             type={cred.isSecret && !showSecrets[cred.name] ? "password" : "text"}
                             className="pr-10"
-                            readOnly
+                            placeholder="Insira o valor da credencial"
                           />
                           {cred.isSecret && (
                             <button
@@ -158,11 +157,11 @@ const Settings = () => {
                           <Input
                             id={cred.name}
                             value={cred.isSecret && !showSecrets[cred.name] 
-                              ? "•".repeat(Math.min(cred.value.length, 12))
+                              ? "•".repeat(Math.min(cred.value.length || 12, 12))
                               : cred.value}
                             type={cred.isSecret && !showSecrets[cred.name] ? "password" : "text"}
                             className="pr-10"
-                            readOnly
+                            placeholder="Insira o valor da credencial"
                           />
                           {cred.isSecret && (
                             <button
@@ -215,11 +214,11 @@ const Settings = () => {
                           <Input
                             id={cred.name}
                             value={cred.isSecret && !showSecrets[cred.name] 
-                              ? "•".repeat(Math.min(cred.value.length, 12))
+                              ? "•".repeat(Math.min(cred.value.length || 12, 12))
                               : cred.value}
                             type={cred.isSecret && !showSecrets[cred.name] ? "password" : "text"}
                             className="pr-10"
-                            readOnly
+                            placeholder="Insira o valor da credencial"
                           />
                           {cred.isSecret && (
                             <button
