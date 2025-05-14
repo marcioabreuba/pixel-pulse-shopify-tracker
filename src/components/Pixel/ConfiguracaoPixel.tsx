@@ -33,8 +33,8 @@ const ConfiguracaoPixel = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      pixelId: "1163339595278098",
-      accessToken: "EAAHZAkMjZBhOkBOyNMyPlwzhsX3ruT2cUAQCe8pqOFyuD15BzCspoQ8VZAMWahuI5yTmHUsIDIURs7uSOXH0DOZBKXsu9sFlhaYTC7sQ5o5dVYIYggiZBFDLZAEyZC63qPjvhe4Q8RbxX7yMCWDaULYJ2TA8fKFJDPMweuR44ayRdDVWziDm1LYrLOgZC3LIBWbKPgZDZD",
+      pixelId: "", // Removed Pixel ID
+      accessToken: "", // Removed Access Token
       apiVersion: "v19.0",
       enableServerSide: true,
       enableBrowserSide: true,
@@ -77,7 +77,7 @@ const ConfiguracaoPixel = () => {
                     <FormItem>
                       <FormLabel>ID do Pixel</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} placeholder="Insira o ID do seu Meta Pixel" />
                       </FormControl>
                       <FormDescription>
                         O ID do seu Meta Pixel (encontrado no Gerenciador de Eventos do Meta)
@@ -94,7 +94,7 @@ const ConfiguracaoPixel = () => {
                     <FormItem>
                       <FormLabel>Token de Acesso à API</FormLabel>
                       <FormControl>
-                        <Input {...field} type="password" />
+                        <Input {...field} type="password" placeholder="Insira o token de acesso à API" />
                       </FormControl>
                       <FormDescription>
                         Token de acesso para a API do servidor do Meta Conversions
