@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Events from "./pages/Events";
 import Shopify from "./pages/Shopify";
 import Analytics from "./pages/Analytics";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/events" element={<Events />} />
             <Route path="/shopify" element={<Shopify />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

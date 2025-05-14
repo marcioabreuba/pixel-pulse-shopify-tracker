@@ -9,20 +9,20 @@ import { CheckCircle2, AlertCircle, HelpCircle } from "lucide-react";
 const Shopify = () => {
   return (
     <div className="container py-8">
-      <h1 className="text-3xl font-bold tracking-tight mb-8">Shopify Integration</h1>
+      <h1 className="text-3xl font-bold tracking-tight mb-8">Integração com Shopify</h1>
       
       <div className="grid md:grid-cols-2 gap-8">
         <ShopifyIntegration />
         
         <Card>
           <CardHeader>
-            <CardTitle>Event Mapping</CardTitle>
-            <CardDescription>Configure Shopify events to Facebook Pixel events mapping</CardDescription>
+            <CardTitle>Mapeamento de Eventos</CardTitle>
+            <CardDescription>Configure o mapeamento de eventos Shopify para eventos do Pixel do Meta</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="mapping">
               <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="mapping">Event Mapping</TabsTrigger>
+                <TabsTrigger value="mapping">Mapeamento de Eventos</TabsTrigger>
                 <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
               </TabsList>
               
@@ -39,7 +39,7 @@ const Shopify = () => {
                       <div>
                         <p className="font-medium text-sm">{event.shopify}</p>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <span>Maps to:</span>
+                          <span>Mapeia para:</span>
                           <span className="font-mono bg-muted px-1.5 py-0.5 rounded">{event.pixel}</span>
                         </div>
                       </div>
@@ -47,12 +47,12 @@ const Shopify = () => {
                         {event.status === "active" ? (
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" />
-                            <span>Active</span>
+                            <span>Ativo</span>
                           </Badge>
                         ) : (
                           <Badge variant="outline" className="bg-gray-50 text-gray-500 border-gray-200 flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />
-                            <span>Inactive</span>
+                            <span>Inativo</span>
                           </Badge>
                         )}
                       </div>
@@ -66,11 +66,11 @@ const Shopify = () => {
                   <div className="bg-muted p-4 rounded">
                     <h3 className="text-sm font-medium flex items-center gap-1.5 mb-2">
                       <HelpCircle className="h-4 w-4 text-muted-foreground" />
-                      <span>Webhook Information</span>
+                      <span>Informações sobre Webhooks</span>
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      Webhooks allow your application to be notified when specific events occur in your Shopify store. 
-                      The system will automatically register these webhooks during the integration process.
+                      Os webhooks permitem que sua aplicação seja notificada quando eventos específicos ocorrem em sua loja Shopify. 
+                      O sistema registrará automaticamente esses webhooks durante o processo de integração.
                     </p>
                   </div>
                   
@@ -90,11 +90,11 @@ const Shopify = () => {
                         <div>
                           {webhook.status === "active" ? (
                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                              Active
+                              Ativo
                             </Badge>
                           ) : (
                             <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                              Pending
+                              Pendente
                             </Badge>
                           )}
                         </div>

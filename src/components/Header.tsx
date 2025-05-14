@@ -16,11 +16,11 @@ const Header = () => {
         <nav className="hidden md:flex items-center space-x-4">
           <Link to="/" className="text-sm font-medium hover:text-tracking-blue flex items-center gap-1">
             <Layout className="h-4 w-4" />
-            <span>Dashboard</span>
+            <span>Painel</span>
           </Link>
           <Link to="/events" className="text-sm font-medium hover:text-tracking-blue flex items-center gap-1">
             <Activity className="h-4 w-4" />
-            <span>Events</span>
+            <span>Eventos</span>
           </Link>
           <Link to="/shopify" className="text-sm font-medium hover:text-tracking-blue flex items-center gap-1">
             <Database className="h-4 w-4" />
@@ -28,16 +28,16 @@ const Header = () => {
           </Link>
           <Link to="/analytics" className="text-sm font-medium hover:text-tracking-blue flex items-center gap-1">
             <BarChart3 className="h-4 w-4" />
-            <span>Analytics</span>
+            <span>Análises</span>
           </Link>
         </nav>
         
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" className="text-muted-foreground">
             <Settings className="h-5 w-5" />
-            <span className="sr-only">Settings</span>
+            <span className="sr-only">Configurações</span>
           </Button>
-          <Button>Get Started</Button>
+          <Button>Iniciar</Button>
         </div>
       </div>
     </header>

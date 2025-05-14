@@ -9,44 +9,44 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-tracking-gray-light">
       <div className="container pt-16 pb-20">
-        {/* Hero Section */}
+        {/* Seção Principal */}
         <div className="text-center max-w-3xl mx-auto">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl mb-6">
-            Advanced Facebook Pixel Tracking for <span className="text-tracking-blue">Shopify</span>
+            Rastreamento Avançado de <span className="text-tracking-blue">Pixel do Meta</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-            Improve your marketing analytics with precision geolocation tracking and seamless Shopify integration.
+            Melhore sua análise de marketing com rastreamento preciso de geolocalização e integração perfeita com Shopify.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/dashboard">
               <Button size="lg" className="gap-2">
-                Go to Dashboard
+                Acessar Painel
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link to="/events">
-              <Button size="lg" variant="outline">Configure Tracking</Button>
+              <Button size="lg" variant="outline">Configurar Rastreamento</Button>
             </Link>
           </div>
         </div>
         
-        {/* Features Section */}
+        {/* Seção de Funcionalidades */}
         <div className="mt-24">
-          <h2 className="text-3xl font-bold text-center mb-12">Key Features</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Funcionalidades Principais</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <Card>
               <CardHeader>
                 <div className="h-12 w-12 rounded-lg bg-tracking-blue/10 flex items-center justify-center mb-4">
                   <Activity className="h-6 w-6 text-tracking-blue" />
                 </div>
-                <CardTitle>Advanced Pixel Tracking</CardTitle>
+                <CardTitle>Rastreamento Avançado de Pixel</CardTitle>
                 <CardDescription>
-                  Comprehensive Facebook Pixel integration with custom event mapping
+                  Integração completa do Pixel do Meta com mapeamento personalizado de eventos
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Track standard and custom events with detailed attribution data for improved ad performance.
+                  Rastreie eventos padrão e personalizados com dados detalhados de atribuição para melhorar o desempenho dos anúncios.
                 </p>
               </CardContent>
             </Card>
@@ -56,14 +56,14 @@ const Index = () => {
                 <div className="h-12 w-12 rounded-lg bg-tracking-blue/10 flex items-center justify-center mb-4">
                   <Database className="h-6 w-6 text-tracking-blue" />
                 </div>
-                <CardTitle>Shopify Integration</CardTitle>
+                <CardTitle>Integração com Shopify</CardTitle>
                 <CardDescription>
-                  Seamless connection with your Shopify store via API
+                  Conexão perfeita com sua loja Shopify via API
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Automatically track product views, cart actions, checkouts and purchases with detailed product data.
+                  Rastreie automaticamente visualizações de produtos, ações de carrinho, checkouts e compras com dados detalhados dos produtos.
                 </p>
               </CardContent>
             </Card>
@@ -73,14 +73,14 @@ const Index = () => {
                 <div className="h-12 w-12 rounded-lg bg-tracking-blue/10 flex items-center justify-center mb-4">
                   <Globe className="h-6 w-6 text-tracking-blue" />
                 </div>
-                <CardTitle>Geolocation Tracking</CardTitle>
+                <CardTitle>Rastreamento por Localização</CardTitle>
                 <CardDescription>
-                  Precise location data using GeoLite2 database
+                  Dados precisos de localização usando o banco de dados GeoLite2
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Enhance your events with accurate location data for better targeting and regional analytics.
+                  Aprimore seus eventos com dados precisos de localização para um melhor direcionamento e análise regional.
                 </p>
               </CardContent>
             </Card>
@@ -90,31 +90,31 @@ const Index = () => {
                 <div className="h-12 w-12 rounded-lg bg-tracking-blue/10 flex items-center justify-center mb-4">
                   <BarChart3 className="h-6 w-6 text-tracking-blue" />
                 </div>
-                <CardTitle>Performance Analytics</CardTitle>
+                <CardTitle>Analytics de Desempenho</CardTitle>
                 <CardDescription>
-                  Detailed tracking performance metrics and reports
+                  Métricas e relatórios detalhados de desempenho de rastreamento
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Monitor event success rates, user engagement, and conversion metrics through intuitive dashboards.
+                  Monitore taxas de sucesso de eventos, engajamento de usuários e métricas de conversão através de painéis intuitivos.
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
         
-        {/* How It Works Section */}
+        {/* Seção Como Funciona */}
         <div className="mt-24">
-          <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Como Funciona</h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="h-16 w-16 bg-tracking-blue rounded-full text-white flex items-center justify-center mx-auto mb-6">
                 <span className="text-xl font-bold">1</span>
               </div>
-              <h3 className="text-xl font-medium mb-3">Connect</h3>
+              <h3 className="text-xl font-medium mb-3">Conectar</h3>
               <p className="text-muted-foreground">
-                Link your Facebook Pixel and Shopify store to the platform
+                Vincule seu Pixel do Meta e sua loja Shopify à plataforma
               </p>
             </div>
             
@@ -122,9 +122,9 @@ const Index = () => {
               <div className="h-16 w-16 bg-tracking-blue rounded-full text-white flex items-center justify-center mx-auto mb-6">
                 <span className="text-xl font-bold">2</span>
               </div>
-              <h3 className="text-xl font-medium mb-3">Configure</h3>
+              <h3 className="text-xl font-medium mb-3">Configurar</h3>
               <p className="text-muted-foreground">
-                Set up event tracking and geolocation parameters
+                Configure o rastreamento de eventos e parâmetros de geolocalização
               </p>
             </div>
             
@@ -132,22 +132,22 @@ const Index = () => {
               <div className="h-16 w-16 bg-tracking-blue rounded-full text-white flex items-center justify-center mx-auto mb-6">
                 <span className="text-xl font-bold">3</span>
               </div>
-              <h3 className="text-xl font-medium mb-3">Monitor</h3>
+              <h3 className="text-xl font-medium mb-3">Monitorar</h3>
               <p className="text-muted-foreground">
-                Track performance and optimize your marketing campaigns
+                Acompanhe o desempenho e otimize suas campanhas de marketing
               </p>
             </div>
           </div>
         </div>
         
-        {/* CTA Section */}
+        {/* Seção CTA */}
         <div className="mt-24 bg-card rounded-xl p-8 md:p-12 border shadow-md text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-4">Ready to improve your marketing analytics?</h2>
+          <h2 className="text-2xl md:text-3xl font-bold mb-4">Pronto para melhorar suas análises de marketing?</h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Get started with our advanced tracking system optimized for Brazilian e-commerce stores.
+            Comece com nosso sistema avançado de rastreamento otimizado para lojas de e-commerce brasileiras.
           </p>
           <Link to="/dashboard">
-            <Button size="lg">Get Started Today</Button>
+            <Button size="lg">Comece Hoje Mesmo</Button>
           </Link>
         </div>
       </div>

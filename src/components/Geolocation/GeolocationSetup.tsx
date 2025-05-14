@@ -31,23 +31,23 @@ const GeolocationSetup = () => {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-    toast.success("Geolocation settings saved successfully");
+    toast.success("Configurações de geolocalização salvas com sucesso");
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Geolocation Setup</CardTitle>
-        <CardDescription>Configure GeoLite2 database for IP geolocation tracking</CardDescription>
+        <CardTitle>Configuração de Geolocalização</CardTitle>
+        <CardDescription>Configure o banco de dados GeoLite2 para rastreamento de geolocalização por IP</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6 flex items-start gap-2">
           <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
           <div>
-            <h4 className="text-sm font-medium text-amber-800">Important Notice</h4>
+            <h4 className="text-sm font-medium text-amber-800">Aviso Importante</h4>
             <p className="text-xs text-amber-700 mt-1">
-              You need to download the GeoLite2-City.mmdb database from MaxMind and provide the path here. 
-              For optimal performance on Render.com hosting, place the database in the project root or a accessible directory.
+              Você precisa baixar o banco de dados GeoLite2-City.mmdb da MaxMind e fornecer o caminho aqui.
+              Para um desempenho ideal na hospedagem Render.com, coloque o banco de dados na raiz do projeto ou em um diretório acessível.
             </p>
           </div>
         </div>
@@ -59,12 +59,12 @@ const GeolocationSetup = () => {
               name="geoDbPath"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>GeoLite2 Database Path</FormLabel>
+                  <FormLabel>Caminho do Banco de Dados GeoLite2</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
                   <FormDescription>
-                    Path to your GeoLite2-City.mmdb file on the server
+                    Caminho para seu arquivo GeoLite2-City.mmdb no servidor
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -77,9 +77,9 @@ const GeolocationSetup = () => {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel>Enable Geolocation</FormLabel>
+                    <FormLabel>Ativar Geolocalização</FormLabel>
                     <FormDescription>
-                      Use IP geolocation in tracking events
+                      Usar geolocalização por IP nos eventos de rastreamento
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -98,9 +98,9 @@ const GeolocationSetup = () => {
               render={({ field }) => (
                 <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                   <div className="space-y-0.5">
-                    <FormLabel>Include in Pixel Events</FormLabel>
+                    <FormLabel>Incluir nos Eventos do Pixel</FormLabel>
                     <FormDescription>
-                      Add location data to Facebook Pixel events
+                      Adicionar dados de localização aos eventos do Meta Pixel
                     </FormDescription>
                   </div>
                   <FormControl>
@@ -118,19 +118,19 @@ const GeolocationSetup = () => {
               name="updateFrequency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Database Update Frequency</FormLabel>
+                  <FormLabel>Frequência de Atualização do Banco</FormLabel>
                   <FormControl>
                     <select
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                       {...field}
                     >
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="quarterly">Quarterly</option>
+                      <option value="weekly">Semanal</option>
+                      <option value="monthly">Mensal</option>
+                      <option value="quarterly">Trimestral</option>
                     </select>
                   </FormControl>
                   <FormDescription>
-                    How often to update the GeoLite2 database
+                    Com que frequência atualizar o banco de dados GeoLite2
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -138,7 +138,7 @@ const GeolocationSetup = () => {
             />
             
             <CardFooter className="px-0 pb-0">
-              <Button type="submit">Save Geolocation Settings</Button>
+              <Button type="submit">Salvar Configurações de Geolocalização</Button>
             </CardFooter>
           </form>
         </Form>
