@@ -140,7 +140,8 @@ export class MetaPixelService {
     }
 
     try {
-      const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events`;
+      // CORRIGIDO: Enviando token na URL como query parameter
+      const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events?access_token=${encodeURIComponent(this.config.pixelToken)}`;
       console.log(`Enviando evento ${eventData.event_name} para ${url}`);
       
       // Sanitizar dados antes de enviar
@@ -148,7 +149,6 @@ export class MetaPixelService {
       
       const body = {
         data: [cleanEventData],
-        access_token: this.config.pixelToken,  // Usado pixelToken em vez de accessToken
         test_event_code: this.config.testEventCode || (process.env.NODE_ENV === 'development' ? 'TEST123' : undefined)
       };
       
@@ -278,9 +278,7 @@ export class MetaPixelService {
     });
 
     try {
-      // Enviar um evento de teste diretamente para o endpoint /events
-      console.log('Enviando evento de teste para o endpoint /events...');
-      
+      // CORRIGIDO: Enviando token na URL como query parameter
       const testEvent = {
         event_name: "DiagnosticsTest",
         event_time: Math.floor(Date.now() / 1000),
@@ -288,14 +286,15 @@ export class MetaPixelService {
         event_id: `test_${Date.now()}`,
       };
       
-      const testUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events`;
+      // Colocando o token na query-string, não no body
+      const testUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events?access_token=${encodeURIComponent(this.config.pixelToken)}`;
       const testBody = {
         data: [testEvent],
-        access_token: this.config.pixelToken,   // Usado pixelToken em vez de accessToken
-        test_event_code: this.config.testEventCode || 'TEST123'  // Usando o testEventCode configurado
+        test_event_code: this.config.testEventCode || 'TEST123'
       };
       
       console.log('Enviando requisição para:', testUrl);
+      console.log('Payload do teste:', JSON.stringify(testBody));
       
       const testResponse = await fetch(testUrl, {
         method: 'POST',
