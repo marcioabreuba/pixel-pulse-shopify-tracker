@@ -42,7 +42,7 @@ export function usePixel(options: UsePixelOptions) {
       setIsConfigured(true);
     }
     
-    toast.success('Configurações do Pixel atualizadas');
+    console.log('Configurações do Pixel atualizadas:', newConfig);
   }, [pixelService]);
 
   // Rastreia um evento
@@ -80,9 +80,12 @@ export function usePixel(options: UsePixelOptions) {
   // Testa a conexão com a API do Meta
   const testConnection = useCallback(async (): Promise<{ success: boolean; message: string }> => {
     setIsTesting(true);
+    console.log('Testando conexão com o Meta Pixel...');
+    console.log('Configuração atual:', pixelConfig);
     
     try {
       const result = await pixelService.testConnection();
+      console.log('Resultado do teste:', result);
       
       if (result.success) {
         toast.success(result.message);
@@ -92,13 +95,14 @@ export function usePixel(options: UsePixelOptions) {
       
       return result;
     } catch (error) {
+      console.error('Erro ao testar conexão:', error);
       const message = `Erro ao testar conexão: ${(error as Error).message}`;
       toast.error(message);
       return { success: false, message };
     } finally {
       setIsTesting(false);
     }
-  }, [pixelService]);
+  }, [pixelService, pixelConfig]);
 
   return {
     isConfigured,

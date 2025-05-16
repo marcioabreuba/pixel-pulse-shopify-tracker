@@ -2,16 +2,15 @@
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeolocationSetup from "@/components/Geolocation/GeolocationSetup";
-import { AlertCircle, EyeIcon, EyeOffIcon, CopyIcon, Loader2, CheckCircle2 } from "lucide-react";
+import { AlertCircle, EyeIcon, EyeOffIcon, CopyIcon, Loader2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
-import { InfoIcon } from "lucide-react";
 import { usePixel } from "@/hooks/usePixel";
 import { useCredentials } from "@/hooks";
 
@@ -20,18 +19,20 @@ const Settings = () => {
   const [isTesting, setIsTesting] = useState(false);
   const { getCredential, saveCredential } = useCredentials({ encryptionKey: 'prod-pixel-config' });
 
-  // Get stored credentials
-  const storedPixelId = getCredential('FB_PIXEL_ID');
-  const storedAccessToken = getCredential('FB_ACCESS_TOKEN');
-  const storedApiVersion = getCredential('FB_API_VERSION') || 'v19.0';
+  // Estado local para os valores dos inputs
+  const [pixelId, setPixelId] = useState(getCredential('FB_PIXEL_ID') || '');
+  const [accessToken, setAccessToken] = useState(getCredential('FB_ACCESS_TOKEN') || '');
+  const [apiVersion, setApiVersion] = useState(getCredential('FB_API_VERSION') || 'v19.0');
+  const [enableServerSide, setEnableServerSide] = useState(getCredential('FB_ENABLE_SERVER_SIDE') !== 'false');
+  const [enableBrowserSide, setEnableBrowserSide] = useState(getCredential('FB_ENABLE_BROWSER_SIDE') !== 'false');
   
-  // Initialize the pixel hook for testing
+  // Initialize the pixel hook with current values
   const { testConnection, updateConfig } = usePixel({
-    pixelId: storedPixelId || '',
-    accessToken: storedAccessToken || '',
-    apiVersion: storedApiVersion,
-    enableServerSide: true,
-    enableBrowserSide: true
+    pixelId,
+    accessToken,
+    apiVersion,
+    enableServerSide,
+    enableBrowserSide
   });
 
   // Mostrar/esconder credenciais
@@ -50,19 +51,23 @@ const Settings = () => {
   };
 
   // Salvar credenciais do Meta
-  const saveMetaCredentials = (pixelId: string, accessToken: string, apiVersion: string) => {
+  const saveMetaCredentials = () => {
     const pixelSaved = saveCredential('FB_PIXEL_ID', pixelId);
     const tokenSaved = saveCredential('FB_ACCESS_TOKEN', accessToken);
     const versionSaved = saveCredential('FB_API_VERSION', apiVersion);
+    const serverSaved = saveCredential('FB_ENABLE_SERVER_SIDE', enableServerSide.toString());
+    const browserSaved = saveCredential('FB_ENABLE_BROWSER_SIDE', enableBrowserSide.toString());
     
     // Update pixel configuration
     updateConfig({
       pixelId,
       accessToken,
       apiVersion,
+      enableServerSide,
+      enableBrowserSide
     });
     
-    if (pixelSaved && tokenSaved && versionSaved) {
+    if (pixelSaved && tokenSaved && versionSaved && serverSaved && browserSaved) {
       toast.success("Configurações do Meta Pixel salvas com sucesso");
     } else {
       toast.error("Ocorreu um erro ao salvar algumas configurações");
@@ -74,6 +79,15 @@ const Settings = () => {
     setIsTesting(true);
     
     try {
+      // Atualizando a configuração antes de testar
+      updateConfig({
+        pixelId,
+        accessToken,
+        apiVersion,
+        enableServerSide,
+        enableBrowserSide
+      });
+      
       const result = await testConnection();
       if (result.success) {
         toast.success(result.message);
@@ -87,27 +101,22 @@ const Settings = () => {
     }
   };
 
-  // Credenciais de serviço com valores removidos
+  // Credenciais de serviço com valores atualizados
   const credentials = {
-    meta: [
-      { name: "FB_PIXEL_ID", value: storedPixelId || "", description: "ID do Pixel do Meta", isSecret: false },
-      { name: "FB_ACCESS_TOKEN", value: storedAccessToken || "", description: "Token de acesso à API do Meta", isSecret: true },
-      { name: "FB_API_VERSION", value: storedApiVersion, description: "Versão da API do Meta", isSecret: false }
-    ],
     maxmind: [
-      { name: "MAXMIND_ACCOUNT_ID", value: "", description: "ID da conta MaxMind GeoIP", isSecret: false },
-      { name: "MAXMIND_LICENSE_KEY", value: "", description: "Chave de licença MaxMind GeoIP", isSecret: true }
+      { name: "MAXMIND_ACCOUNT_ID", value: getCredential('MAXMIND_ACCOUNT_ID') || "", description: "ID da conta MaxMind GeoIP", isSecret: false },
+      { name: "MAXMIND_LICENSE_KEY", value: getCredential('MAXMIND_LICENSE_KEY') || "", description: "Chave de licença MaxMind GeoIP", isSecret: true }
     ],
     yampi: [
-      { name: "YAMPI_WEBHOOK_SECRET", value: "", description: "Chave secreta para webhook Yampi", isSecret: true }
+      { name: "YAMPI_WEBHOOK_SECRET", value: getCredential('YAMPI_WEBHOOK_SECRET') || "", description: "Chave secreta para webhook Yampi", isSecret: true }
     ],
     database: [
-      { name: "DB_CONNECTION", value: "pgsql", description: "Tipo de conexão do banco de dados", isSecret: false },
-      { name: "DB_HOST", value: "", description: "Host do banco de dados", isSecret: false },
-      { name: "DB_PORT", value: "5432", description: "Porta do banco de dados", isSecret: false },
-      { name: "DB_DATABASE", value: "", description: "Nome do banco de dados", isSecret: false },
-      { name: "DB_USERNAME", value: "", description: "Usuário do banco de dados", isSecret: false },
-      { name: "DB_PASSWORD", value: "", description: "Senha do banco de dados", isSecret: true }
+      { name: "DB_CONNECTION", value: getCredential('DB_CONNECTION') || "pgsql", description: "Tipo de conexão do banco de dados", isSecret: false },
+      { name: "DB_HOST", value: getCredential('DB_HOST') || "", description: "Host do banco de dados", isSecret: false },
+      { name: "DB_PORT", value: getCredential('DB_PORT') || "5432", description: "Porta do banco de dados", isSecret: false },
+      { name: "DB_DATABASE", value: getCredential('DB_DATABASE') || "", description: "Nome do banco de dados", isSecret: false },
+      { name: "DB_USERNAME", value: getCredential('DB_USERNAME') || "", description: "Usuário do banco de dados", isSecret: false },
+      { name: "DB_PASSWORD", value: getCredential('DB_PASSWORD') || "", description: "Senha do banco de dados", isSecret: true }
     ]
   };
 
@@ -141,58 +150,106 @@ const Settings = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {credentials.meta.map((cred) => (
-                    <div key={cred.name} className="grid gap-2">
-                      <div className="flex justify-between items-center">
-                        <Label htmlFor={cred.name} className="text-sm font-medium">
-                          {cred.name}
-                        </Label>
-                        <div className="text-xs text-muted-foreground">{cred.description}</div>
-                      </div>
-                      <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Input
-                            id={cred.name}
-                            value={cred.isSecret && !showSecrets[cred.name] 
-                              ? "•".repeat(Math.min(cred.value.length || 12, 12))
-                              : cred.value}
-                            type={cred.isSecret && !showSecrets[cred.name] ? "password" : "text"}
-                            className="pr-10"
-                            placeholder="Insira o valor da credencial"
-                            onChange={(e) => {
-                              // Atualiza o valor no estado local
-                              const newCredentials = {...credentials};
-                              const index = newCredentials.meta.findIndex(c => c.name === cred.name);
-                              if (index !== -1) {
-                                newCredentials.meta[index].value = e.target.value;
-                              }
-                            }}
-                          />
-                          {cred.isSecret && (
-                            <button
-                              type="button"
-                              onClick={() => toggleSecretVisibility(cred.name)}
-                              className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                            >
-                              {showSecrets[cred.name] ? (
-                                <EyeOffIcon className="h-4 w-4" />
-                              ) : (
-                                <EyeIcon className="h-4 w-4" />
-                              )}
-                            </button>
-                          )}
-                        </div>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="outline"
-                          onClick={() => copyToClipboard(cred.value)}
-                        >
-                          <CopyIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
+                  {/* FB_PIXEL_ID */}
+                  <div className="grid gap-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="FB_PIXEL_ID" className="text-sm font-medium">
+                        FB_PIXEL_ID
+                      </Label>
+                      <div className="text-xs text-muted-foreground">ID do Pixel do Meta</div>
                     </div>
-                  ))}
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          id="FB_PIXEL_ID"
+                          value={pixelId}
+                          type="text"
+                          className="pr-10"
+                          placeholder="Insira o ID do Pixel"
+                          onChange={(e) => setPixelId(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => copyToClipboard(pixelId)}
+                      >
+                        <CopyIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* FB_ACCESS_TOKEN */}
+                  <div className="grid gap-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="FB_ACCESS_TOKEN" className="text-sm font-medium">
+                        FB_ACCESS_TOKEN
+                      </Label>
+                      <div className="text-xs text-muted-foreground">Token de acesso à API do Meta</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          id="FB_ACCESS_TOKEN"
+                          value={showSecrets['FB_ACCESS_TOKEN'] ? accessToken : "•".repeat(Math.min(accessToken.length || 12, 12))}
+                          type={showSecrets['FB_ACCESS_TOKEN'] ? "text" : "password"}
+                          className="pr-10"
+                          placeholder="Insira o token de acesso"
+                          onChange={(e) => setAccessToken(e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleSecretVisibility('FB_ACCESS_TOKEN')}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        >
+                          {showSecrets['FB_ACCESS_TOKEN'] ? (
+                            <EyeOffIcon className="h-4 w-4" />
+                          ) : (
+                            <EyeIcon className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => copyToClipboard(accessToken)}
+                      >
+                        <CopyIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* FB_API_VERSION */}
+                  <div className="grid gap-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="FB_API_VERSION" className="text-sm font-medium">
+                        FB_API_VERSION
+                      </Label>
+                      <div className="text-xs text-muted-foreground">Versão da API do Meta</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          id="FB_API_VERSION"
+                          value={apiVersion}
+                          type="text"
+                          className="pr-10"
+                          placeholder="Insira a versão da API"
+                          onChange={(e) => setApiVersion(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => copyToClipboard(apiVersion)}
+                      >
+                        <CopyIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
 
                   <div className="flex flex-col gap-4 pt-4 mt-6 border-t">
                     <div className="text-sm font-medium mb-2">Opções de Rastreamento</div>
@@ -204,7 +261,7 @@ const Settings = () => {
                           Enviar eventos via API do servidor
                         </div>
                       </div>
-                      <Switch defaultChecked />
+                      <Switch checked={enableServerSide} onCheckedChange={setEnableServerSide} />
                     </div>
                     
                     <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
@@ -214,19 +271,12 @@ const Settings = () => {
                           Usar o script do Pixel no navegador
                         </div>
                       </div>
-                      <Switch defaultChecked />
+                      <Switch checked={enableBrowserSide} onCheckedChange={setEnableBrowserSide} />
                     </div>
                   </div>
 
                   <div className="flex gap-4 pt-4">
-                    <Button 
-                      onClick={() => {
-                        const pixelId = credentials.meta.find(c => c.name === "FB_PIXEL_ID")?.value || "";
-                        const accessToken = credentials.meta.find(c => c.name === "FB_ACCESS_TOKEN")?.value || "";
-                        const apiVersion = credentials.meta.find(c => c.name === "FB_API_VERSION")?.value || "v19.0";
-                        saveMetaCredentials(pixelId, accessToken, apiVersion);
-                      }}
-                    >
+                    <Button onClick={saveMetaCredentials}>
                       Salvar Configurações
                     </Button>
                     
@@ -234,7 +284,7 @@ const Settings = () => {
                       type="button" 
                       variant="outline" 
                       onClick={handleTestConnection}
-                      disabled={isTesting || !storedPixelId || !storedAccessToken}
+                      disabled={isTesting || !pixelId || !accessToken}
                     >
                       {isTesting ? (
                         <>
