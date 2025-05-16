@@ -5,6 +5,7 @@ export { usePixel } from './usePixel';
 export { useGeolocation } from './useGeolocation';
 export { useWebhooks } from './useWebhooks';
 export { useCredentials } from './useCredentials';
+export { useIsMobile, useMobile } from './use-mobile';
 
 // Reexporta tipos
 export type { UseShopifyOptions } from './useShopify';

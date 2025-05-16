@@ -26,7 +26,7 @@ const formSchema = z.object({
 });
 
 export interface EventTesterProps {
-  pixelId?: string;
+  pixelId?: string | number; // Atualizado para aceitar number e string
   pixelToken?: string;
 }
 
@@ -41,8 +41,11 @@ const EventTester: React.FC<EventTesterProps> = ({
     success: boolean;
   } | null>(null);
 
+  // Convertemos pixelId para string caso seja número
+  const pixelIdStr = pixelId ? String(pixelId) : '';
+
   const { trackEvent, prepareUserData } = usePixel({ 
-    pixelId: pixelId || '',
+    pixelId: pixelIdStr,
     accessToken: pixelToken,
     enableServerSide: !!pixelToken,
     enableBrowserSide: !!pixelId
