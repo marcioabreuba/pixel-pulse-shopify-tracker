@@ -252,9 +252,9 @@ export class MetaPixelService {
     return this.config.enableBrowserSide;
   }
 
-  // Testa a conexão apenas enviando um evento de teste para o endpoint /events
+  // Testa a conexão enviando um evento de teste para o endpoint /events
   async testConnection(): Promise<{ success: boolean, message: string }> {
-    console.log('Iniciando teste de conexão simplificado com Meta Pixel');
+    console.log('Iniciando teste de conexão com Meta Pixel');
     
     if (!this.config.pixelId || this.config.pixelId === '') {
       return { 
