@@ -46,7 +46,7 @@ const EventTester: React.FC<EventTesterProps> = ({
 
   const { trackEvent, prepareUserData } = usePixel({ 
     pixelId: pixelIdStr,
-    accessToken: pixelToken,
+    accessToken: pixelToken || '',
     enableServerSide: !!pixelToken,
     enableBrowserSide: !!pixelId
   });

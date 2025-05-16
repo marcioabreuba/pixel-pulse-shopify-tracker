@@ -1,11 +1,10 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { services, PixelConfig, EventData, UserData } from '../services';
 import { toast } from 'sonner';
 
 export interface UsePixelOptions {
   pixelId: string;
-  accessToken?: string;
+  accessToken: string;
   apiVersion?: string;
   enableServerSide?: boolean;
   enableBrowserSide?: boolean;
