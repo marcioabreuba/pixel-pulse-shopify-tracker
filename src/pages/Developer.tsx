@@ -7,11 +7,21 @@ import ApiConnectionTester from '@/components/TestTools/ApiConnectionTester';
 import { useCredentials } from '@/hooks';
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { usePixel } from "@/hooks/usePixel";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 
 const Developer = () => {
   const [activeTab, setActiveTab] = useState('api');
   const [isSyncing, setIsSyncing] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [eventType, setEventType] = useState('ViewContent');
+  const [customData, setCustomData] = useState('{\n  "content_name": "Página de Produto",\n  "content_type": "product",\n  "value": 99.99,\n  "currency": "BRL"\n}');
+  const [isSendingEvent, setIsSendingEvent] = useState(false);
+  const [eventResult, setEventResult] = useState<{ success: boolean; message: string; time?: string } | null>(null);
   
   const { 
     getCredential,
@@ -40,6 +50,15 @@ const Developer = () => {
   };
   
   const [storedCredentials, setStoredCredentials] = useState(getStoredCredentials());
+  
+  // Initialize the pixel hook for testing
+  const { trackEvent, testConnection, prepareUserData, updateConfig } = usePixel({
+    pixelId: storedCredentials.pixelId || '',
+    accessToken: storedCredentials.pixelToken || '',
+    apiVersion: 'v19.0',
+    enableServerSide: true,
+    enableBrowserSide: true
+  });
   
   // Recarrega credenciais quando o componente monta
   useEffect(() => {
@@ -84,6 +103,80 @@ const Developer = () => {
       setIsClearing(false);
     }
   };
+
+  // Parse custom data (safely)
+  const parseCustomData = () => {
+    try {
+      return JSON.parse(customData || '{}');
+    } catch (e) {
+      toast.error('Erro ao analisar dados JSON personalizados');
+      return {};
+    }
+  };
+  
+  // Send test event
+  const handleSendEvent = async () => {
+    if (!storedCredentials.pixelId || !storedCredentials.pixelToken) {
+      toast.error('ID do pixel e token de acesso são necessários');
+      return;
+    }
+    
+    setIsSendingEvent(true);
+    setEventResult(null);
+    
+    try {
+      const eventData = parseCustomData();
+      const userData = prepareUserData({
+        email: 'teste@exemplo.com',
+        phone: '5511999999999',
+        firstName: 'Usuário',
+        lastName: 'Teste',
+        city: 'São Paulo',
+        state: 'SP',
+        country: 'BR',
+        zipCode: '01000000'
+      });
+      
+      const startTime = Date.now();
+      const success = await trackEvent(eventType, userData, eventData);
+      const endTime = Date.now();
+      
+      if (success) {
+        setEventResult({
+          success: true,
+          message: `Evento ${eventType} enviado com sucesso para o pixel ${storedCredentials.pixelId}`,
+          time: `${endTime - startTime}ms`
+        });
+        toast.success(`Evento ${eventType} enviado com sucesso`);
+      } else {
+        setEventResult({
+          success: false,
+          message: `Falha ao enviar evento ${eventType}`,
+          time: `${endTime - startTime}ms`
+        });
+        toast.error(`Falha ao enviar evento ${eventType}`);
+      }
+    } catch (error) {
+      console.error('Erro ao enviar evento:', error);
+      setEventResult({
+        success: false,
+        message: `Erro: ${(error as Error).message}`,
+      });
+      toast.error(`Erro ao enviar evento: ${(error as Error).message}`);
+    } finally {
+      setIsSendingEvent(false);
+    }
+  };
+
+  // Tipos de eventos
+  const EVENT_TYPES = [
+    { id: 'ViewContent', name: 'Visualização de Conteúdo', description: 'Quando um visitante visualiza uma página ou item' },
+    { id: 'AddToCart', name: 'Adicionar ao Carrinho', description: 'Quando um item é adicionado ao carrinho de compras' },
+    { id: 'InitiateCheckout', name: 'Iniciar Checkout', description: 'Quando um usuário inicia o processo de checkout' },
+    { id: 'Purchase', name: 'Compra', description: 'Quando uma compra é concluída' },
+    { id: 'Lead', name: 'Lead', description: 'Quando um formulário de lead é enviado' },
+    { id: 'CompleteRegistration', name: 'Registro Completo', description: 'Quando um registro é concluído' }
+  ];
 
   return (
     <div className="container py-8">
@@ -226,6 +319,131 @@ const Developer = () => {
             </div>
           </CardFooter>
         </Card>
+      </div>
+
+      {/* Quadro de teste de envio de eventos - Movido da página Settings */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Teste de Envio de Eventos</CardTitle>
+          <CardDescription>
+            Envie eventos de teste para o Meta Pixel e Conversions API
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {(!storedCredentials.pixelId || !storedCredentials.pixelToken) && (
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-md flex gap-2 items-center">
+                <AlertCircle className="h-5 w-5 text-amber-600" />
+                <div>
+                  <p className="text-sm text-amber-800">
+                    Configure o ID do pixel e o token de acesso na página de Configurações para usar esta funcionalidade.
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="event-type">Tipo de Evento</Label>
+                <Select
+                  value={eventType}
+                  onValueChange={setEventType}
+                >
+                  <SelectTrigger id="event-type">
+                    <SelectValue placeholder="Selecione o tipo de evento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EVENT_TYPES.map((event) => (
+                      <SelectItem key={event.id} value={event.id}>
+                        {event.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {EVENT_TYPES.find(e => e.id === eventType)?.description}
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="custom-data">Dados Personalizados (JSON)</Label>
+                <Textarea
+                  id="custom-data"
+                  value={customData}
+                  onChange={(e) => setCustomData(e.target.value)}
+                  rows={6}
+                  placeholder='{\n  "content_name": "Nome do produto",\n  "value": 99.99,\n  "currency": "BRL"\n}'
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Dados personalizados para enviar com o evento em formato JSON
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+        
+        <CardFooter className="flex flex-col items-stretch gap-4">
+          <Button 
+            onClick={handleSendEvent} 
+            disabled={isSendingEvent || !storedCredentials.pixelId || !storedCredentials.pixelToken}
+            className="w-full"
+          >
+            {isSendingEvent ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando Evento...
+              </>
+            ) : (
+              'Enviar Evento de Teste'
+            )}
+          </Button>
+          
+          {eventResult && (
+            <div className={`p-3 rounded-md border ${eventResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+              <div className="flex items-center gap-2">
+                {eventResult.success ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-red-600" />
+                )}
+                <span className={`text-sm ${eventResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                  {eventResult.message}
+                </span>
+              </div>
+              {eventResult.time && (
+                <p className="text-xs text-muted-foreground mt-1 pl-7">
+                  Tempo de resposta: {eventResult.time}
+                </p>
+              )}
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+
+      {/* Quadro de informações do sistema - Movido da página Settings */}
+      <div className="bg-muted p-6 rounded-lg border mb-8">
+        <h2 className="text-xl font-semibold mb-4">Informações do Sistema</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-sm font-medium mb-2">Ambiente</h3>
+            <div className="bg-background p-4 rounded border">
+              <p className="text-sm"><strong>APP_ENV:</strong> production</p>
+              <p className="text-sm"><strong>APP_DEBUG:</strong> false</p>
+              <p className="text-sm"><strong>APP_TIMEZONE:</strong> UTC</p>
+              <p className="text-sm"><strong>Plataforma de Hospedagem:</strong> Render.com</p>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-sm font-medium mb-2">Banco de Dados e Cache</h3>
+            <div className="bg-background p-4 rounded border">
+              <p className="text-sm"><strong>Banco de Dados:</strong> PostgreSQL (Neon)</p>
+              <p className="text-sm"><strong>Cache/Sessão:</strong> Redis</p>
+              <p className="text-sm"><strong>Sistema de Arquivos:</strong> Local</p>
+              <p className="text-sm"><strong>Fila:</strong> Redis</p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
