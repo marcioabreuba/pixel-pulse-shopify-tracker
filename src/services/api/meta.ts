@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // Tipos para a API do Meta
@@ -278,12 +279,17 @@ export class MetaPixelService {
     });
 
     try {
-      // CORRIGIDO: Enviando token na URL como query parameter
+      // CORRIGIDO: Enviando token na URL como query parameter e adicionando dados de usuário necessários
       const testEvent = {
         event_name: "DiagnosticsTest",
         event_time: Math.floor(Date.now() / 1000),
         action_source: "website",
         event_id: `test_${Date.now()}`,
+        // ADICIONADO: Incluir objeto user_data com IP e User-Agent
+        user_data: {
+          client_ip_address: "127.0.0.1",  // IP padrão, já que estamos no navegador
+          client_user_agent: navigator.userAgent || "PixelTracker-Test" // Usar User-Agent do navegador
+        }
       };
       
       // Colocando o token na query-string, não no body
