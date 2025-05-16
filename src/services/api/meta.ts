@@ -252,7 +252,7 @@ export class MetaPixelService {
     return this.config.enableBrowserSide;
   }
 
-  // Testa a conexão com a API do Meta
+  // Testa a conexão com a API do Meta usando token do próprio pixel
   async testConnection(): Promise<{ success: boolean, message: string }> {
     console.log('Iniciando teste de conexão com Meta');
     
@@ -277,11 +277,10 @@ export class MetaPixelService {
     });
 
     try {
-      // Método direto - verificar se podemos acessar o pixel
+      // Primeiro testamos o acesso direto ao pixel usando o token do próprio pixel
       const pixelUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}`;
       console.log(`Verificando acesso ao pixel: ${pixelUrl}`);
       
-      // Tentando acessar o pixel com o token fornecido (token do próprio pixel)
       const pixelResponse = await fetch(`${pixelUrl}?access_token=${encodeURIComponent(this.config.accessToken)}`);
       const pixelData = await pixelResponse.json();
       
@@ -290,18 +289,26 @@ export class MetaPixelService {
       if (pixelData.error) {
         const errorCode = pixelData.error.code || 'Desconhecido';
         const errorMsg = pixelData.error.message || 'Erro desconhecido';
-        console.error(`Erro ao verificar pixel: (${errorCode}) ${errorMsg}`);
+        
+        let mensagemDetalhe = '';
+        
+        // Mensagem mais específica para erro de permissão
+        if (errorCode === 100 || errorMsg.includes('permission')) {
+          mensagemDetalhe = ` Esse erro geralmente indica que o token usado não pertence ao pixel ${this.config.pixelId} ou não tem permissão para acessá-lo. Use o token gerado especificamente para este pixel, não um token de sistema ou usuário.`;
+        }
+        
+        console.error(`Erro ao verificar pixel: (${errorCode}) ${errorMsg}${mensagemDetalhe}`);
         
         return {
           success: false,
-          message: `Erro (${errorCode}): ${errorMsg}. Verifique se o token é válido para o pixel ${this.config.pixelId}.`
+          message: `Erro (${errorCode}): ${errorMsg}.${mensagemDetalhe}`
         };
       }
       
-      // Como último teste, tenta enviar um evento de teste simples
+      // Agora vamos tentar um evento de teste simplificado
       console.log('Enviando evento de teste para validar a Conversions API...');
       
-      // Evento de teste minimalista
+      // Evento de teste minimalista sem dados adicionais para evitar problemas de permissão
       const testEvent = {
         event_name: "PageView",
         event_time: Math.floor(Date.now() / 1000),
@@ -329,9 +336,15 @@ export class MetaPixelService {
         const errorCode = testResult.error.code || 'Desconhecido';
         const errorMsg = testResult.error.message || 'Erro desconhecido';
         
+        let mensagemDetalhe = '';
+        
+        if (errorCode === 100) {
+          mensagemDetalhe = ` Esse erro geralmente ocorre quando você está usando um token que não tem permissão para enviar eventos. Para tokens de pixel, certifique-se de estar usando o token gerado especificamente para o pixel ${this.config.pixelId}.`;
+        }
+        
         return {
           success: false,
-          message: `Pixel encontrado, mas erro ao enviar evento: (${errorCode}) ${errorMsg}.`
+          message: `Pixel encontrado, mas erro ao enviar evento: (${errorCode}) ${errorMsg}.${mensagemDetalhe}`
         };
       }
       
@@ -402,3 +415,4 @@ export class MetaPixelService {
 export function createMetaPixelService(config: PixelConfig): MetaPixelService {
   return new MetaPixelService(config);
 }
+
