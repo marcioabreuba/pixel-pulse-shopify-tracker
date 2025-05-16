@@ -22,8 +22,6 @@ const formSchema = z.object({
     message: "Token de acesso é obrigatório",
   }),
   apiVersion: z.string().default("v19.0"),
-  enableServerSide: z.boolean().default(true),
-  enableBrowserSide: z.boolean().default(true),
   trackProdutoView: z.boolean().default(true),
   trackAddToCart: z.boolean().default(true),
   trackCheckout: z.boolean().default(true),
@@ -56,8 +54,6 @@ const ConfiguracaoPixel = () => {
       pixelId: storedPixelId || "",
       accessToken: storedAccessToken || "",
       apiVersion: storedApiVersion,
-      enableServerSide: true,
-      enableBrowserSide: true,
       trackProdutoView: true,
       trackAddToCart: true,
       trackCheckout: true,
@@ -96,8 +92,8 @@ const ConfiguracaoPixel = () => {
         pixelId: values.pixelId,
         accessToken: values.accessToken,
         apiVersion: values.apiVersion,
-        enableServerSide: values.enableServerSide,
-        enableBrowserSide: values.enableBrowserSide
+        enableServerSide: true,
+        enableBrowserSide: true
       });
       
       // Save event tracking preferences
@@ -214,50 +210,6 @@ const ConfiguracaoPixel = () => {
                     </FormItem>
                   )}
                 />
-                
-                <div className="flex gap-8">
-                  <FormField
-                    control={form.control}
-                    name="enableServerSide"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-2">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel>Rastreamento via Servidor</FormLabel>
-                          <FormDescription>
-                            Enviar eventos via API do servidor
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="enableBrowserSide"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center space-x-2">
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div>
-                          <FormLabel>Rastreamento via Navegador</FormLabel>
-                          <FormDescription>
-                            Usar o script do Pixel no navegador
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                </div>
                 
                 <div className="flex gap-4">
                   <Button type="submit" disabled={isSaving}>
