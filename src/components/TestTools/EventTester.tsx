@@ -25,7 +25,7 @@ const formSchema = z.object({
 });
 
 export interface EventTesterProps {
-  pixelId?: string | number;
+  pixelId?: string | number;  // Alterado para aceitar string ou número
   pixelToken?: string;
 }
 
@@ -43,8 +43,8 @@ const EventTester: React.FC<EventTesterProps> = ({
   // Convertemos pixelId para string caso seja número
   const pixelIdStr = pixelId ? String(pixelId) : '';
 
-  const { trackEvent, prepareUserData } = usePixel({ 
-    pixelId: pixelIdStr,      // Here is line 66 where we're passing a string
+  const { trackEvent, prepareUserData } = usePixel({
+    pixelId: pixelIdStr,  // Agora o hook aceita string ou número aqui
     accessToken: pixelToken || '',
     enableServerSide: !!pixelToken,
     enableBrowserSide: !!pixelId

@@ -4,7 +4,7 @@ import { services, PixelConfig, EventData, UserData } from '../services';
 import { toast } from 'sonner';
 
 export interface UsePixelOptions {
-  pixelId: string;      // Changed to string to match our usage in EventTester
+  pixelId: string | number;  // Alterado para aceitar string ou número
   accessToken: string;
   apiVersion?: string;
   enableServerSide?: boolean;
@@ -17,7 +17,7 @@ export function usePixel(options: UsePixelOptions) {
 
   // Configura as opções padrão
   const pixelConfig: PixelConfig = {
-    pixelId: options.pixelId,
+    pixelId: String(options.pixelId),  // Convertemos para string aqui
     accessToken: options.accessToken || '',
     apiVersion: options.apiVersion || 'v19.0',
     enableServerSide: options.enableServerSide !== false,

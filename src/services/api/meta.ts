@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Tipos para a API do Meta
@@ -94,8 +93,8 @@ export class MetaPixelService {
   }
 
   // Atualiza a configuração
-  updateConfig(config: Partial<PixelConfig>): void {
-    this.config = { ...this.config, ...config };
+  updateConfig(newConfig: Partial<PixelConfig>): void {
+    this.config = { ...this.config, ...newConfig };
     
     if (this.config.enableBrowserSide && !this.pixelInitialized) {
       this.initializePixel();
