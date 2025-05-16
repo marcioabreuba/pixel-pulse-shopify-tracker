@@ -14,33 +14,50 @@ export interface UsePixelOptions {
 export function usePixel(options: UsePixelOptions) {
   const [isConfigured, setIsConfigured] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
-
-  // Configura as opções padrão
-  const pixelConfig: PixelConfig = {
-    pixelId: String(options.pixelId),  // Convertemos para string aqui
+  const [currentConfig, setCurrentConfig] = useState<PixelConfig>({
+    pixelId: String(options.pixelId),
     accessToken: options.accessToken || '',
     apiVersion: options.apiVersion || 'v19.0',
     enableServerSide: options.enableServerSide !== false,
     enableBrowserSide: options.enableBrowserSide !== false,
-  };
+  });
 
-  // Inicializa o serviço do Meta Pixel
-  const pixelService = services.getMetaPixelService(pixelConfig);
+  // Inicializa o serviço do Meta Pixel com a configuração inicial
+  const pixelService = services.getMetaPixelService(currentConfig);
 
   // Verifica a configuração inicial
   useEffect(() => {
-    if (options.pixelId && options.pixelId !== '') {
+    if (options.pixelId && String(options.pixelId).trim() !== '') {
+      console.log('usePixel: ID do pixel definido:', options.pixelId);
       setIsConfigured(true);
     } else {
+      console.log('usePixel: ID do pixel não definido');
       setIsConfigured(false);
     }
-  }, [options.pixelId]);
+    
+    // Atualiza a configuração quando as opções mudam
+    const newConfig = {
+      pixelId: String(options.pixelId),
+      accessToken: options.accessToken || '',
+      apiVersion: options.apiVersion || 'v19.0',
+      enableServerSide: options.enableServerSide !== false,
+      enableBrowserSide: options.enableBrowserSide !== false,
+    };
+    
+    console.log('usePixel: Atualizando configuração com opções:', newConfig);
+    setCurrentConfig(newConfig);
+    pixelService.updateConfig(newConfig);
+    
+  }, [options.pixelId, options.accessToken, options.apiVersion, options.enableServerSide, options.enableBrowserSide, pixelService]);
 
   // Atualiza a configuração do pixel
   const updateConfig = useCallback((newConfig: Partial<PixelConfig>) => {
     try {
-      console.log('Atualizando configurações do Pixel:', newConfig);
-      pixelService.updateConfig(newConfig);
+      console.log('usePixel: Atualizando configurações do Pixel:', newConfig);
+      
+      const updatedConfig = { ...currentConfig, ...newConfig };
+      setCurrentConfig(updatedConfig);
+      pixelService.updateConfig(updatedConfig);
       
       if (newConfig.pixelId && newConfig.pixelId !== '') {
         setIsConfigured(true);
@@ -49,7 +66,7 @@ export function usePixel(options: UsePixelOptions) {
       console.error('Erro ao atualizar configurações do Pixel:', error);
       toast.error(`Erro ao atualizar configurações: ${(error as Error).message}`);
     }
-  }, [pixelService]);
+  }, [currentConfig, pixelService]);
 
   // Rastreia um evento
   const trackEvent = useCallback(async (
@@ -88,9 +105,9 @@ export function usePixel(options: UsePixelOptions) {
   const testConnection = useCallback(async (): Promise<{ success: boolean; message: string }> => {
     setIsTesting(true);
     console.log('Testando conexão com o Meta Pixel...');
-    console.log('Configuração atual:', pixelConfig);
+    console.log('Configuração atual:', currentConfig);
     
-    if (!pixelConfig.pixelId || pixelConfig.pixelId === '') {
+    if (!currentConfig.pixelId || currentConfig.pixelId === '') {
       setIsTesting(false);
       return { 
         success: false, 
@@ -98,7 +115,7 @@ export function usePixel(options: UsePixelOptions) {
       };
     }
     
-    if (!pixelConfig.accessToken || pixelConfig.accessToken === '') {
+    if (!currentConfig.accessToken || currentConfig.accessToken === '') {
       setIsTesting(false);
       return { 
         success: false, 
@@ -108,6 +125,10 @@ export function usePixel(options: UsePixelOptions) {
     
     try {
       console.log('Enviando requisição de teste para o Meta...');
+      
+      // Garantir que estamos usando a configuração mais recente
+      pixelService.updateConfig(currentConfig);
+      
       const result = await pixelService.testConnection();
       console.log('Resultado do teste:', result);
       
@@ -123,7 +144,7 @@ export function usePixel(options: UsePixelOptions) {
     } finally {
       setIsTesting(false);
     }
-  }, [pixelService, pixelConfig]);
+  }, [currentConfig, pixelService]);
 
   return {
     isConfigured,
@@ -132,5 +153,6 @@ export function usePixel(options: UsePixelOptions) {
     updateConfig,
     prepareUserData,
     testConnection,
+    currentConfig,
   };
 }

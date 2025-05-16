@@ -29,13 +29,18 @@ export const services = {
   // Meta Pixel service
   getMetaPixelService(config?: PixelConfig): MetaPixelService {
     if (config) {
-      // Se uma nova configuração for fornecida, vamos criar uma nova instância
+      // Sempre criamos uma nova instância quando uma configuração é fornecida
+      // Isso ajuda a garantir que sempre temos as configurações mais recentes
       console.log('Criando nova instância de MetaPixelService com config:', config);
       metaPixelServiceInstance = createMetaPixelService(config);
-    } else if (!metaPixelServiceInstance) {
+      return metaPixelServiceInstance;
+    } 
+    
+    if (!metaPixelServiceInstance) {
       console.warn('Tentativa de obter MetaPixelService sem configuração inicial');
       throw new Error('MetaPixelService não inicializado. Forneça config na primeira chamada.');
     }
+    
     return metaPixelServiceInstance;
   },
   

@@ -237,33 +237,85 @@ export class MetaPixelService {
     });
 
     try {
-      const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}?access_token=${this.config.accessToken}`;
-      console.log(`Enviando requisição GET para: ${this.config.apiVersion}/${this.config.pixelId}`);
+      // Abordagem alternativa para teste: diretamente buscar dados do pixel
+      console.log(`Usando URL para teste: graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}`);
       
-      const response = await fetch(url);
-      console.log('Resposta recebida, status:', response.status);
+      const baseUrl = `https://graph.facebook.com/${this.config.apiVersion}/`;
       
-      const responseData = await response.json();
-      console.log('Dados da resposta:', responseData);
+      // Primeira abordagem: tentar obter detalhes do pixel
+      const pixelUrl = `${baseUrl}${this.config.pixelId}?access_token=${encodeURIComponent(this.config.accessToken)}`;
+      console.log(`Enviando requisição GET para verificar pixel`);
+      
+      const response = await fetch(pixelUrl);
       
       if (!response.ok) {
-        if (responseData.error) {
-          console.error('Erro retornado pelo Meta:', responseData.error);
-          return { 
-            success: false, 
-            message: `Erro: ${responseData.error.message}` 
+        // Se não conseguiu dados do pixel, tentar usando ads_management
+        console.log(`Primeira abordagem falhou (${response.status}), tentando segunda abordagem com ads_management`);
+        
+        // Segunda abordagem: tentar enviar um evento de teste para o pixel
+        const testEventUrl = `${baseUrl}${this.config.pixelId}/events`;
+        const testBody = {
+          data: [{
+            event_name: "ViewContent",
+            event_time: Math.floor(Date.now() / 1000),
+            action_source: "website",
+            event_id: `test_${Date.now()}`,
+            user_data: {
+              client_user_agent: "Mozilla/5.0"
+            }
+          }],
+          access_token: this.config.accessToken,
+          test_event_code: "TEST12345"
+        };
+        
+        console.log(`Enviando evento de teste para verificar permissões`);
+        const testResponse = await fetch(testEventUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(testBody)
+        });
+        
+        const testData = await testResponse.json();
+        
+        if (testResponse.ok) {
+          console.log(`Evento de teste enviado com sucesso:`, testData);
+          return {
+            success: true,
+            message: `Conexão estabelecida com sucesso. Pixel ${this.config.pixelId} está funcional.`
+          };
+        } else {
+          console.error(`Erro no evento de teste:`, testData);
+          
+          // Extrair mensagem de erro mais detalhada
+          const errorMsg = testData.error?.message || `Erro HTTP ${testResponse.status}`;
+          const errorCode = testData.error?.code || 'Desconhecido';
+          
+          let mensagemDetalhada = `Erro (${errorCode}): ${errorMsg}`;
+          
+          // Sugestões baseadas em códigos de erro comuns
+          if (errorMsg.includes('Missing Permission')) {
+            mensagemDetalhada += `. Seu token de acesso não tem as permissões necessárias. Verifique se seu token tem as permissões 'ads_management' e 'business_management'.`;
+          } else if (errorCode === 190) {
+            mensagemDetalhada += `. O token de acesso é inválido ou expirou. Gere um novo token no Meta Business.`;
+          }
+          
+          return {
+            success: false,
+            message: mensagemDetalhada
           };
         }
-        return { 
-          success: false, 
-          message: `Erro HTTP ${response.status}` 
-        };
       }
       
-      if (responseData.id) {
-        return { 
-          success: true, 
-          message: `Conexão bem-sucedida. Pixel '${responseData.name || responseData.id}' encontrado.` 
+      // Se a primeira abordagem funcionou
+      const pixelData = await response.json();
+      console.log(`Dados do pixel recebidos:`, pixelData);
+      
+      if (pixelData.id) {
+        return {
+          success: true,
+          message: `Conexão bem-sucedida. Pixel '${pixelData.name || pixelData.id}' encontrado.`
         };
       } else {
         return {

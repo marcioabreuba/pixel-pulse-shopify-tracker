@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePixel, useGeolocation, useShopify } from '@/hooks';
@@ -59,6 +58,20 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
     scopes: ['read_products', 'write_orders'],
     redirectUri: `${window.location.origin}/shopify/callback`
   });
+
+  // Atualiza a configuração do pixel quando as props mudam
+  useEffect(() => {
+    if (pixelId || pixelToken) {
+      console.log("ApiConnectionTester: Atualizando configuração com novos valores:", { pixelId, pixelToken });
+      updateConfig({
+        pixelId: pixelId || '',
+        accessToken: pixelToken || '',
+        apiVersion: 'v19.0',
+        enableServerSide: true,
+        enableBrowserSide: true
+      });
+    }
+  }, [pixelId, pixelToken, updateConfig]);
 
   // Testa conexão com Meta Pixel
   const handleTestPixel = async () => {
