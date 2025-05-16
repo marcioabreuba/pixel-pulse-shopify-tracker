@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,8 @@ import { toast } from "sonner";
 
 export interface ApiConnectionTesterProps {
   pixelId?: string;
-  pixelToken?: string;
+  pixelToken?: string;         // Renomeado de pixelToken para pixelToken
+  testEventCode?: string;      // Novo campo para código de evento de teste
   geoAccountId?: string;
   geoLicenseKey?: string;
   shopifyApiKey?: string;
@@ -16,7 +18,8 @@ export interface ApiConnectionTesterProps {
 
 const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
   pixelId,
-  pixelToken,
+  pixelToken,                 // Renomeado de pixelToken para pixelToken
+  testEventCode,              // Novo campo
   geoAccountId,
   geoLicenseKey,
   shopifyApiKey,
@@ -41,7 +44,8 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
   // Inicializa hooks com valores atualizados
   const { testConnection: testPixel, updateConfig } = usePixel({ 
     pixelId: pixelId || '',
-    accessToken: pixelToken || '',
+    pixelToken: pixelToken || '',   // Renomeado para pixelToken
+    testEventCode: testEventCode || 'TEST123',  // Adicionado testEventCode
     apiVersion: 'v19.0',
     enableServerSide: true,
     enableBrowserSide: true
@@ -62,21 +66,22 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
   // Atualiza a configuração do pixel quando as props mudam
   useEffect(() => {
     if (pixelId || pixelToken) {
-      console.log("ApiConnectionTester: Atualizando configuração com novos valores:", { pixelId, pixelToken });
+      console.log("ApiConnectionTester: Atualizando configuração com novos valores:", { pixelId, pixelToken, testEventCode });
       updateConfig({
         pixelId: pixelId || '',
-        accessToken: pixelToken || '',
+        pixelToken: pixelToken || '',  // Renomeado para pixelToken
+        testEventCode: testEventCode,  // Adicionado testEventCode
         apiVersion: 'v19.0',
         enableServerSide: true,
         enableBrowserSide: true
       });
     }
-  }, [pixelId, pixelToken, updateConfig]);
+  }, [pixelId, pixelToken, testEventCode, updateConfig]);
 
   // Testa conexão com Meta Pixel - Versão simplificada
   const handleTestPixel = async () => {
     if (!pixelId || !pixelToken) {
-      const errorMsg = "ID do Pixel e Token de acesso são necessários";
+      const errorMsg = "ID do Pixel e Token do Pixel são necessários";  // Texto atualizado
       setResults(prev => ({
         ...prev, 
         pixel: { success: false, message: errorMsg }
@@ -86,13 +91,14 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
     }
     
     setTesting(prev => ({ ...prev, pixel: true }));
-    console.log("Testando conexão do Meta Pixel em ApiConnectionTester:", { pixelId, pixelToken });
+    console.log("Testando conexão do Meta Pixel em ApiConnectionTester:", { pixelId, pixelToken, testEventCode });
     
     try {
       // Atualizando configuração antes do teste
       updateConfig({
         pixelId: pixelId || '',
-        accessToken: pixelToken || '',
+        pixelToken: pixelToken || '',      // Renomeado para pixelToken
+        testEventCode: testEventCode,       // Adicionado testEventCode
         apiVersion: 'v19.0',
         enableServerSide: true,
         enableBrowserSide: true

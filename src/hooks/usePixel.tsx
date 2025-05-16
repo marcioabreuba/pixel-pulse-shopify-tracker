@@ -1,14 +1,14 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { services, PixelConfig, EventData, UserData } from '../services';
 import { toast } from 'sonner';
 
 export interface UsePixelOptions {
   pixelId: string | number;  // Alterado para aceitar string ou número
-  accessToken: string;
+  pixelToken: string;        // Renomeado de accessToken para pixelToken
   apiVersion?: string;
   enableServerSide?: boolean;
   enableBrowserSide?: boolean;
+  testEventCode?: string;    // Novo campo para código de evento de teste
 }
 
 export function usePixel(options: UsePixelOptions) {
@@ -16,10 +16,11 @@ export function usePixel(options: UsePixelOptions) {
   const [isTesting, setIsTesting] = useState(false);
   const [currentConfig, setCurrentConfig] = useState<PixelConfig>({
     pixelId: String(options.pixelId),
-    accessToken: options.accessToken || '',
+    pixelToken: options.pixelToken || '',     // Renomeado para pixelToken
     apiVersion: options.apiVersion || 'v19.0',
     enableServerSide: options.enableServerSide !== false,
     enableBrowserSide: options.enableBrowserSide !== false,
+    testEventCode: options.testEventCode || 'TEST123', // Adicionado testEventCode
   });
 
   // Inicializa o serviço do Meta Pixel com a configuração inicial
@@ -38,10 +39,11 @@ export function usePixel(options: UsePixelOptions) {
     // Atualiza a configuração quando as opções mudam
     const newConfig = {
       pixelId: String(options.pixelId),
-      accessToken: options.accessToken || '',
+      pixelToken: options.pixelToken || '',   // Renomeado para pixelToken
       apiVersion: options.apiVersion || 'v19.0',
       enableServerSide: options.enableServerSide !== false,
       enableBrowserSide: options.enableBrowserSide !== false,
+      testEventCode: options.testEventCode || 'TEST123', // Adicionado testEventCode
     };
     
     console.log('usePixel: Atualizando configuração com opções:', newConfig);
@@ -54,7 +56,7 @@ export function usePixel(options: UsePixelOptions) {
       console.error('Erro ao atualizar configuração do serviço Pixel:', error);
     }
     
-  }, [options.pixelId, options.accessToken, options.apiVersion, options.enableServerSide, options.enableBrowserSide]);
+  }, [options.pixelId, options.pixelToken, options.apiVersion, options.enableServerSide, options.enableBrowserSide, options.testEventCode]);
 
   // Atualiza a configuração do pixel
   const updateConfig = useCallback((newConfig: Partial<PixelConfig>) => {
@@ -121,11 +123,11 @@ export function usePixel(options: UsePixelOptions) {
       };
     }
     
-    if (!currentConfig.accessToken || currentConfig.accessToken === '') {
+    if (!currentConfig.pixelToken || currentConfig.pixelToken === '') {
       setIsTesting(false);
       return { 
         success: false, 
-        message: 'Token de acesso não configurado' 
+        message: 'Token do Pixel não configurado' 
       };
     }
     

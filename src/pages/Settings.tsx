@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeolocationSetup from "@/components/Geolocation/GeolocationSetup";
@@ -20,8 +21,9 @@ const Settings = () => {
 
   // Estado local para os valores dos inputs
   const [pixelId, setPixelId] = useState(getCredential('FB_PIXEL_ID') || '');
-  const [accessToken, setAccessToken] = useState(getCredential('FB_ACCESS_TOKEN') || '');
+  const [pixelToken, setPixelToken] = useState(getCredential('FB_PIXEL_TOKEN') || '');  // Renomeado para pixelToken
   const [apiVersion, setApiVersion] = useState(getCredential('FB_API_VERSION') || 'v19.0');
+  const [testEventCode, setTestEventCode] = useState(getCredential('FB_TEST_EVENT_CODE') || 'TEST123'); // Novo campo
   const [enableServerSide, setEnableServerSide] = useState(getCredential('FB_ENABLE_SERVER_SIDE') !== 'false');
   const [enableBrowserSide, setEnableBrowserSide] = useState(getCredential('FB_ENABLE_BROWSER_SIDE') !== 'false');
   
@@ -31,8 +33,9 @@ const Settings = () => {
   // Initialize the pixel hook with current values
   const { testConnection, updateConfig } = usePixel({
     pixelId,
-    accessToken,
+    pixelToken,  // Renomeado para pixelToken
     apiVersion,
+    testEventCode, // Adicionado testEventCode
     enableServerSide,
     enableBrowserSide
   });
@@ -54,44 +57,47 @@ const Settings = () => {
 
   // Salvar credenciais do Meta
   const saveMetaCredentials = () => {
-    console.log("Salvando credenciais:", { pixelId, accessToken, apiVersion, enableServerSide, enableBrowserSide });
+    console.log("Salvando credenciais:", { pixelId, pixelToken, apiVersion, testEventCode, enableServerSide, enableBrowserSide });
     const pixelSaved = saveCredential('FB_PIXEL_ID', pixelId);
-    const tokenSaved = saveCredential('FB_ACCESS_TOKEN', accessToken);
+    const tokenSaved = saveCredential('FB_PIXEL_TOKEN', pixelToken); // Renomeado para FB_PIXEL_TOKEN
     const versionSaved = saveCredential('FB_API_VERSION', apiVersion);
+    const testCodeSaved = saveCredential('FB_TEST_EVENT_CODE', testEventCode); // Salvar código de teste
     const serverSaved = saveCredential('FB_ENABLE_SERVER_SIDE', enableServerSide.toString());
     const browserSaved = saveCredential('FB_ENABLE_BROWSER_SIDE', enableBrowserSide.toString());
     
     // Update pixel configuration
     updateConfig({
       pixelId,
-      accessToken,
+      pixelToken, // Renomeado para pixelToken
       apiVersion,
+      testEventCode, // Adicionado testEventCode
       enableServerSide,
       enableBrowserSide
     });
     
-    if (pixelSaved && tokenSaved && versionSaved && serverSaved && browserSaved) {
+    if (pixelSaved && tokenSaved && versionSaved && testCodeSaved && serverSaved && browserSaved) {
       toast.success("Configurações do Meta Pixel salvas com sucesso");
     } else {
       toast.error("Ocorreu um erro ao salvar algumas configurações");
     }
   };
 
-  // Test pixel connection - Método simplificado
+  // Test pixel connection
   const handleTestConnection = async () => {
     setIsTesting(true);
-    setTestResult(null); // Limpa o resultado anterior
+    setTestResult(null);
     
     try {
       console.log("Testando conexão com o pixel. Configuração:", { 
-        pixelId, accessToken, apiVersion, enableServerSide, enableBrowserSide 
+        pixelId, pixelToken, apiVersion, testEventCode, enableServerSide, enableBrowserSide 
       });
       
       // Atualizando a configuração antes de testar
       updateConfig({
         pixelId,
-        accessToken,
+        pixelToken, // Renomeado para pixelToken
         apiVersion,
+        testEventCode, // Adicionado testEventCode
         enableServerSide,
         enableBrowserSide
       });
@@ -195,30 +201,30 @@ const Settings = () => {
                     </div>
                   </div>
 
-                  {/* FB_ACCESS_TOKEN */}
+                  {/* FB_PIXEL_TOKEN (anteriormente FB_ACCESS_TOKEN) */}
                   <div className="grid gap-2">
                     <div className="flex justify-between items-center">
-                      <Label htmlFor="FB_ACCESS_TOKEN" className="text-sm font-medium">
-                        FB_ACCESS_TOKEN
+                      <Label htmlFor="FB_PIXEL_TOKEN" className="text-sm font-medium">
+                        FB_PIXEL_TOKEN
                       </Label>
-                      <div className="text-xs text-muted-foreground">Token de acesso à API do Meta</div>
+                      <div className="text-xs text-muted-foreground">Token do Pixel do Meta</div>
                     </div>
                     <div className="flex gap-2">
                       <div className="relative flex-1">
                         <Input
-                          id="FB_ACCESS_TOKEN"
-                          value={showSecrets['FB_ACCESS_TOKEN'] ? accessToken : "•".repeat(Math.min(accessToken.length || 12, 12))}
-                          type={showSecrets['FB_ACCESS_TOKEN'] ? "text" : "password"}
+                          id="FB_PIXEL_TOKEN"
+                          value={showSecrets['FB_PIXEL_TOKEN'] ? pixelToken : "•".repeat(Math.min(pixelToken.length || 12, 12))}
+                          type={showSecrets['FB_PIXEL_TOKEN'] ? "text" : "password"}
                           className="pr-10"
-                          placeholder="Insira o token de acesso"
-                          onChange={(e) => setAccessToken(e.target.value)}
+                          placeholder="Insira o token do Pixel"
+                          onChange={(e) => setPixelToken(e.target.value)}
                         />
                         <button
                           type="button"
-                          onClick={() => toggleSecretVisibility('FB_ACCESS_TOKEN')}
+                          onClick={() => toggleSecretVisibility('FB_PIXEL_TOKEN')}
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                         >
-                          {showSecrets['FB_ACCESS_TOKEN'] ? (
+                          {showSecrets['FB_PIXEL_TOKEN'] ? (
                             <EyeOffIcon className="h-4 w-4" />
                           ) : (
                             <EyeIcon className="h-4 w-4" />
@@ -229,7 +235,7 @@ const Settings = () => {
                         type="button"
                         size="icon"
                         variant="outline"
-                        onClick={() => copyToClipboard(accessToken)}
+                        onClick={() => copyToClipboard(pixelToken)}
                       >
                         <CopyIcon className="h-4 w-4" />
                       </Button>
@@ -260,6 +266,36 @@ const Settings = () => {
                         size="icon"
                         variant="outline"
                         onClick={() => copyToClipboard(apiVersion)}
+                      >
+                        <CopyIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* FB_TEST_EVENT_CODE - Novo campo */}
+                  <div className="grid gap-2">
+                    <div className="flex justify-between items-center">
+                      <Label htmlFor="FB_TEST_EVENT_CODE" className="text-sm font-medium">
+                        FB_TEST_EVENT_CODE
+                      </Label>
+                      <div className="text-xs text-muted-foreground">Código de evento de teste para a API do Meta</div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Input
+                          id="FB_TEST_EVENT_CODE"
+                          value={testEventCode}
+                          type="text"
+                          className="pr-10"
+                          placeholder="Ex: TEST123"
+                          onChange={(e) => setTestEventCode(e.target.value)}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => copyToClipboard(testEventCode)}
                       >
                         <CopyIcon className="h-4 w-4" />
                       </Button>
@@ -299,7 +335,7 @@ const Settings = () => {
                       type="button" 
                       variant="outline" 
                       onClick={handleTestConnection}
-                      disabled={isTesting || !pixelId || !accessToken}
+                      disabled={isTesting || !pixelId || !pixelToken}
                     >
                       {isTesting ? (
                         <>

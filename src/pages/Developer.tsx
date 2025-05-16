@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +32,8 @@ const Developer = () => {
   // Carrega credenciais armazenadas localmente (para desenvolvimento/teste)
   const getStoredCredentials = () => {
     const pixelId = getCredential('FB_PIXEL_ID');
-    const pixelToken = getCredential('FB_ACCESS_TOKEN');
+    const pixelToken = getCredential('FB_PIXEL_TOKEN');         // Renomeado para pixelToken
+    const testEventCode = getCredential('FB_TEST_EVENT_CODE');  // Adicionado testEventCode
     const geoAccountId = getCredential('MAXMIND_ACCOUNT_ID');
     const geoLicenseKey = getCredential('MAXMIND_LICENSE_KEY');
     const shopifyApiKey = getCredential('SHOPIFY_API_KEY');
@@ -41,7 +41,8 @@ const Developer = () => {
     
     return {
       pixelId,
-      pixelToken,
+      pixelToken,          // Renomeado para pixelToken
+      testEventCode,       // Adicionado testEventCode
       geoAccountId,
       geoLicenseKey,
       shopifyApiKey,
@@ -54,7 +55,8 @@ const Developer = () => {
   // Initialize the pixel hook for testing
   const { trackEvent, testConnection, prepareUserData, updateConfig } = usePixel({
     pixelId: storedCredentials.pixelId || '',
-    accessToken: storedCredentials.pixelToken || '',
+    pixelToken: storedCredentials.pixelToken || '',    // Renomeado para pixelToken
+    testEventCode: storedCredentials.testEventCode,    // Adicionado testEventCode
     apiVersion: 'v19.0',
     enableServerSide: true,
     enableBrowserSide: true
@@ -194,7 +196,8 @@ const Developer = () => {
             <TabsContent value="api">
               <ApiConnectionTester 
                 pixelId={storedCredentials.pixelId}
-                pixelToken={storedCredentials.pixelToken}
+                pixelToken={storedCredentials.pixelToken}         // Renomeado para pixelToken
+                testEventCode={storedCredentials.testEventCode}   // Adicionado testEventCode
                 geoAccountId={storedCredentials.geoAccountId}
                 geoLicenseKey={storedCredentials.geoLicenseKey}
                 shopifyApiKey={storedCredentials.shopifyApiKey}
@@ -243,6 +246,18 @@ const Developer = () => {
                   <span>Meta Pixel:</span>
                   <span className={storedCredentials.pixelId ? "text-green-600" : "text-red-600"}>
                     {storedCredentials.pixelId ? "Configurado" : "Não configurado"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Token do Pixel:</span>
+                  <span className={storedCredentials.pixelToken ? "text-green-600" : "text-red-600"}>
+                    {storedCredentials.pixelToken ? "Configurado" : "Não configurado"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Código de Evento de Teste:</span>
+                  <span className={storedCredentials.testEventCode ? "text-green-600" : "text-amber-600"}>
+                    {storedCredentials.testEventCode ? storedCredentials.testEventCode : "Padrão (TEST123)"}
                   </span>
                 </div>
                 <div className="flex justify-between">

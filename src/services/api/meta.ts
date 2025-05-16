@@ -3,10 +3,11 @@ import { toast } from "sonner";
 // Tipos para a API do Meta
 export interface PixelConfig {
   pixelId: string;
-  accessToken: string;
+  pixelToken: string;     // Renomeado de accessToken para pixelToken
   apiVersion: string;
   enableServerSide: boolean;
   enableBrowserSide: boolean;
+  testEventCode?: string; // Adicionado campo para código de evento de teste
 }
 
 export interface EventData {
@@ -133,7 +134,7 @@ export class MetaPixelService {
 
   // Rastreia evento via servidor (server-side)
   async trackEventServer(eventData: EventData): Promise<boolean> {
-    if (!this.config.enableServerSide || !this.config.accessToken) {
+    if (!this.config.enableServerSide || !this.config.pixelToken) {
       console.log('Rastreamento via servidor desativado ou token não configurado');
       return false;
     }
@@ -147,8 +148,8 @@ export class MetaPixelService {
       
       const body = {
         data: [cleanEventData],
-        access_token: this.config.accessToken,
-        test_event_code: process.env.NODE_ENV === 'development' ? 'TEST12345' : undefined
+        access_token: this.config.pixelToken,  // Usado pixelToken em vez de accessToken
+        test_event_code: this.config.testEventCode || (process.env.NODE_ENV === 'development' ? 'TEST123' : undefined)
       };
       
       console.log('Payload do evento para API:', JSON.stringify(body));
@@ -262,17 +263,18 @@ export class MetaPixelService {
       };
     }
     
-    if (!this.config.accessToken || this.config.accessToken === '') {
+    if (!this.config.pixelToken || this.config.pixelToken === '') {
       return { 
         success: false, 
-        message: "Token de acesso não configurado" 
+        message: "Token do Pixel não configurado" 
       };
     }
     
     console.log('Testando conexão com configuração:', {
       pixelId: this.config.pixelId,
-      accessToken: this.config.accessToken ? `${this.config.accessToken.substring(0, 5)}...` : 'não definido',
-      apiVersion: this.config.apiVersion
+      pixelToken: this.config.pixelToken ? `${this.config.pixelToken.substring(0, 5)}...` : 'não definido',
+      apiVersion: this.config.apiVersion,
+      testEventCode: this.config.testEventCode || 'TEST123'
     });
 
     try {
@@ -289,8 +291,8 @@ export class MetaPixelService {
       const testUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events`;
       const testBody = {
         data: [testEvent],
-        access_token: this.config.accessToken,
-        test_event_code: 'TEST123'
+        access_token: this.config.pixelToken,   // Usado pixelToken em vez de accessToken
+        test_event_code: this.config.testEventCode || 'TEST123'  // Usando o testEventCode configurado
       };
       
       console.log('Enviando requisição para:', testUrl);
