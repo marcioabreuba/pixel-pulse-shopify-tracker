@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { InfoIcon } from "lucide-react";
+import { InfoIcon, Loader2 } from "lucide-react";
+import { useCredentials } from '@/hooks';
+import { usePixel } from '@/hooks/usePixel';
 
 const formSchema = z.object({
   pixelId: z.string().min(1, {
@@ -30,12 +32,30 @@ const formSchema = z.object({
 });
 
 const ConfiguracaoPixel = () => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const { getCredential, saveCredential } = useCredentials({ encryptionKey: 'prod-pixel-config' });
+  
+  // Get stored credentials
+  const storedPixelId = getCredential('FB_PIXEL_ID');
+  const storedAccessToken = getCredential('FB_ACCESS_TOKEN');
+  const storedApiVersion = getCredential('FB_API_VERSION') || 'v19.0';
+  
+  // Initialize the pixel hook for testing
+  const { testConnection, updateConfig } = usePixel({
+    pixelId: storedPixelId || '',
+    accessToken: storedAccessToken || '',
+    apiVersion: storedApiVersion,
+    enableServerSide: true,
+    enableBrowserSide: true
+  });
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      pixelId: "", // Removed Pixel ID
-      accessToken: "", // Removed Access Token
-      apiVersion: "v19.0",
+      pixelId: storedPixelId || "",
+      accessToken: storedAccessToken || "",
+      apiVersion: storedApiVersion,
       enableServerSide: true,
       enableBrowserSide: true,
       trackProdutoView: true,
@@ -46,10 +66,77 @@ const ConfiguracaoPixel = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast.success("Configurações do Pixel salvas com sucesso");
+  // Update form if stored credentials change
+  useEffect(() => {
+    if (storedPixelId) {
+      form.setValue('pixelId', storedPixelId);
+    }
+    
+    if (storedAccessToken) {
+      form.setValue('accessToken', storedAccessToken);
+    }
+    
+    if (storedApiVersion) {
+      form.setValue('apiVersion', storedApiVersion);
+    }
+  }, [storedPixelId, storedAccessToken, storedApiVersion, form]);
+
+  // Handle form submission
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsSaving(true);
+    
+    try {
+      // Save all values to credentials storage
+      const pixelSaved = saveCredential('FB_PIXEL_ID', values.pixelId);
+      const tokenSaved = saveCredential('FB_ACCESS_TOKEN', values.accessToken);
+      const versionSaved = saveCredential('FB_API_VERSION', values.apiVersion);
+      
+      // Update pixel configuration
+      updateConfig({
+        pixelId: values.pixelId,
+        accessToken: values.accessToken,
+        apiVersion: values.apiVersion,
+        enableServerSide: values.enableServerSide,
+        enableBrowserSide: values.enableBrowserSide
+      });
+      
+      // Save event tracking preferences
+      saveCredential('FB_TRACK_VIEW_CONTENT', values.trackProdutoView.toString());
+      saveCredential('FB_TRACK_ADD_TO_CART', values.trackAddToCart.toString());
+      saveCredential('FB_TRACK_CHECKOUT', values.trackCheckout.toString());
+      saveCredential('FB_TRACK_PURCHASE', values.trackCompra.toString());
+      saveCredential('FB_USE_GEOLOCATION', values.enviarGeolocalizacao.toString());
+      
+      if (pixelSaved && tokenSaved && versionSaved) {
+        toast.success("Configurações do Pixel salvas com sucesso");
+      } else {
+        toast.error("Ocorreu um erro ao salvar algumas configurações");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar configurações:", error);
+      toast.error("Erro ao salvar configurações do Pixel");
+    } finally {
+      setIsSaving(false);
+    }
   }
+
+  // Test pixel connection
+  const handleTestConnection = async () => {
+    setIsTesting(true);
+    
+    try {
+      const result = await testConnection();
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch (error) {
+      toast.error(`Erro ao testar conexão: ${(error as Error).message}`);
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   return (
     <Card>
@@ -172,7 +259,34 @@ const ConfiguracaoPixel = () => {
                   />
                 </div>
                 
-                <Button type="submit">Salvar Configurações</Button>
+                <div className="flex gap-4">
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar Configurações"
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={handleTestConnection}
+                    disabled={isTesting || !form.watch('pixelId') || !form.watch('accessToken')}
+                  >
+                    {isTesting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Testando...
+                      </>
+                    ) : (
+                      "Testar Conexão"
+                    )}
+                  </Button>
+                </div>
               </form>
             </Form>
           </TabsContent>
@@ -180,7 +294,7 @@ const ConfiguracaoPixel = () => {
           <TabsContent value="eventos" className="pt-4">
             <div className="space-y-4">
               <div className="bg-muted p-4 rounded-md flex items-start gap-2">
-                <InfoIcon className="h-5 w-5 text-tracking-blue mt-0.5 flex-shrink-0" />
+                <InfoIcon className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-sm">
                     Configure quais eventos da sua loja Shopify serão enviados automaticamente para o Meta Pixel. 
@@ -279,7 +393,16 @@ const ConfiguracaoPixel = () => {
                     )}
                   />
                   
-                  <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Salvar Configurações de Eventos</Button>
+                  <Button type="submit" onClick={form.handleSubmit(onSubmit)}>
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar Configurações de Eventos"
+                    )}
+                  </Button>
                 </form>
               </Form>
             </div>
@@ -314,18 +437,30 @@ const ConfiguracaoPixel = () => {
                   <h4 className="text-sm font-medium text-amber-800">Informações de Depuração</h4>
                   <div className="mt-2 space-y-2">
                     <p className="text-xs text-amber-700">
-                      <strong>Modo de Teste:</strong> Desativado
+                      <strong>Modo de Teste:</strong> {storedPixelId && storedAccessToken ? "Desativado" : "Ativo - Credenciais não configuradas"}
                     </p>
                     <p className="text-xs text-amber-700">
-                      <strong>Última Sincronização:</strong> Nunca sincronizado
+                      <strong>Última Sincronização:</strong> {storedPixelId ? new Date().toLocaleString() : "Nunca sincronizado"}
                     </p>
                     <p className="text-xs text-amber-700">
-                      <strong>Status da API:</strong> Não verificado
+                      <strong>Status da API:</strong> {storedAccessToken ? "Configurado" : "Não verificado"}
                     </p>
                   </div>
                 </div>
                 
-                <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Salvar Configurações Avançadas</Button>
+                <Button 
+                  type="submit" 
+                  onClick={form.handleSubmit(onSubmit)}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    "Salvar Configurações Avançadas"
+                  )}
+                </Button>
               </form>
             </Form>
           </TabsContent>

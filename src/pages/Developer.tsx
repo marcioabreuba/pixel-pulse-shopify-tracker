@@ -1,19 +1,24 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ApiConnectionTester from '@/components/TestTools/ApiConnectionTester';
+import EventTester from '@/components/TestTools/EventTester';
 import { useCredentials } from '@/hooks';
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const Developer = () => {
   const [activeTab, setActiveTab] = useState('api');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   
   const { 
     getCredential,
     saveCredential,
-    listCredentialKeys
+    listCredentialKeys,
+    removeCredential
   } = useCredentials({ encryptionKey: 'dev-mode-testing' });
   
   // Carrega credenciais armazenadas localmente (para desenvolvimento/teste)
@@ -35,17 +40,50 @@ const Developer = () => {
     };
   };
   
-  const storedCredentials = getStoredCredentials();
+  const [storedCredentials, setStoredCredentials] = useState(getStoredCredentials());
+  
+  // Recarrega credenciais quando o componente monta
+  useEffect(() => {
+    setStoredCredentials(getStoredCredentials());
+  }, []);
   
   // Função para recarregar as credenciais da página Settings
   const syncCredentialsFromSettings = () => {
-    // Em uma implementação real, você buscaria do banco de dados ou API
-    // Por enquanto simulamos apenas uma atualização
-    toast.info("Sincronizando credenciais das configurações...");
+    setIsSyncing(true);
     
-    setTimeout(() => {
-      toast.success("Credenciais sincronizadas com sucesso");
-    }, 1000);
+    try {
+      // Em uma implementação real, você buscaria do banco de dados ou API
+      toast.info("Sincronizando credenciais das configurações...");
+      
+      // Simula uma sincronização recarregando as credenciais do localStorage
+      setTimeout(() => {
+        setStoredCredentials(getStoredCredentials());
+        toast.success("Credenciais sincronizadas com sucesso");
+        setIsSyncing(false);
+      }, 1000);
+    } catch (error) {
+      toast.error("Erro ao sincronizar credenciais");
+      setIsSyncing(false);
+    }
+  };
+  
+  // Função para limpar logs de eventos
+  const clearEventLogs = () => {
+    setIsClearing(true);
+    
+    try {
+      // Em uma implementação real, você limparia os logs do banco de dados
+      toast.info("Limpando logs de eventos...");
+      
+      // Simula limpeza de logs
+      setTimeout(() => {
+        toast.success("Logs limpos com sucesso");
+        setIsClearing(false);
+      }, 1000);
+    } catch (error) {
+      toast.error("Erro ao limpar logs de eventos");
+      setIsClearing(false);
+    }
   };
 
   return (
@@ -56,8 +94,9 @@ const Developer = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="api">Teste de API</TabsTrigger>
+              <TabsTrigger value="events">Envio de Eventos</TabsTrigger>
               <TabsTrigger value="webhooks">Simulador de Webhooks</TabsTrigger>
             </TabsList>
             
@@ -69,6 +108,13 @@ const Developer = () => {
                 geoLicenseKey={storedCredentials.geoLicenseKey}
                 shopifyApiKey={storedCredentials.shopifyApiKey}
                 shopifyApiSecretKey={storedCredentials.shopifyApiSecretKey}
+              />
+            </TabsContent>
+            
+            <TabsContent value="events">
+              <EventTester
+                pixelId={storedCredentials.pixelId}
+                pixelToken={storedCredentials.pixelToken}
               />
             </TabsContent>
             
@@ -160,17 +206,31 @@ const Developer = () => {
                 variant="outline" 
                 className="w-full justify-center"
                 onClick={syncCredentialsFromSettings}
+                disabled={isSyncing}
               >
-                Sincronizar Credenciais
+                {isSyncing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Sincronizando...
+                  </>
+                ) : (
+                  "Sincronizar Credenciais"
+                )}
               </Button>
               <Button 
                 variant="outline" 
                 className="w-full justify-center"
-                onClick={() => {
-                  toast.success("Logs limpos com sucesso");
-                }}
+                onClick={clearEventLogs}
+                disabled={isClearing}
               >
-                Limpar Logs de Eventos
+                {isClearing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Limpando...
+                  </>
+                ) : (
+                  "Limpar Logs de Eventos"
+                )}
               </Button>
             </div>
           </CardFooter>
