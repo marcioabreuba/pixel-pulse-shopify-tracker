@@ -26,7 +26,7 @@ const formSchema = z.object({
 });
 
 export interface EventTesterProps {
-  pixelId?: string | number; // Atualizado para aceitar number e string
+  pixelId?: string | number;
   pixelToken?: string;
 }
 
