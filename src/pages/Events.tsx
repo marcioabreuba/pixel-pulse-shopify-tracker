@@ -94,15 +94,11 @@ const Events = () => {
       
       <div className="flex flex-col md:flex-row gap-8">
         <div className="md:w-2/3">
-          <Tabs defaultValue="pixel" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="pixel">Pixel do Meta</TabsTrigger>
+          <Tabs defaultValue="eventos" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="eventos">Lista de Eventos</TabsTrigger>
               <TabsTrigger value="parametros">Parâmetros Avançados</TabsTrigger>
             </TabsList>
-            <TabsContent value="pixel">
-              <ConfiguracaoPixel />
-            </TabsContent>
             
             <TabsContent value="eventos">
               <div className="bg-card rounded-lg border shadow-sm p-6">

@@ -194,6 +194,30 @@ const Settings = () => {
                     </div>
                   ))}
 
+                  <div className="flex flex-col gap-4 pt-4 mt-6 border-t">
+                    <div className="text-sm font-medium mb-2">Opções de Rastreamento</div>
+                    
+                    <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <Label>Rastreamento via Servidor</Label>
+                        <div className="text-xs text-muted-foreground">
+                          Enviar eventos via API do servidor
+                        </div>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                    
+                    <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                      <div className="space-y-0.5">
+                        <Label>Rastreamento via Navegador</Label>
+                        <div className="text-xs text-muted-foreground">
+                          Usar o script do Pixel no navegador
+                        </div>
+                      </div>
+                      <Switch defaultChecked />
+                    </div>
+                  </div>
+
                   <div className="flex gap-4 pt-4">
                     <Button 
                       onClick={() => {
