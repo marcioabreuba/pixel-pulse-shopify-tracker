@@ -44,7 +44,7 @@ const EventTester: React.FC<EventTesterProps> = ({
   const pixelIdStr = pixelId ? String(pixelId) : '';
 
   const { trackEvent, prepareUserData } = usePixel({
-    pixelId: pixelIdStr,  // Agora o hook aceita string ou número aqui
+    pixelId: pixelId || '',  // Passamos diretamente o pixelId, o hook já aceita string ou número
     accessToken: pixelToken || '',
     enableServerSide: !!pixelToken,
     enableBrowserSide: !!pixelId
