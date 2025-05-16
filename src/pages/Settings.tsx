@@ -188,11 +188,19 @@ const Settings = () => {
     <div className="container py-8">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Configurações</h1>
       
+      <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-8">
+        <h4 className="text-lg font-medium text-amber-800 mb-2">Importante</h4>
+        <p className="text-amber-700">
+          Esta página fornece acesso a chaves de API sensíveis e configurações do sistema. 
+          As alterações feitas aqui afetarão diretamente a funcionalidade do seu sistema de rastreamento.
+        </p>
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Configuração do Meta Pixel</CardTitle>
+              <CardTitle>Meta/Facebook</CardTitle>
               <CardDescription>
                 Configure sua integração com o Meta Pixel para rastreamento de eventos
               </CardDescription>
@@ -495,6 +503,56 @@ const Settings = () => {
             </CardContent>
           </Card>
         </div>
+      </div>
+      
+      <div className="space-y-8 mt-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Geolocalização</CardTitle>
+            <CardDescription>
+              Configure a integração com serviços de geolocalização
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-md">
+              <p className="text-sm text-muted-foreground">
+                Configurações de geolocalização serão implementadas em breve
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Yampi</CardTitle>
+            <CardDescription>
+              Configure a integração com o gateway de pagamentos Yampi
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-md">
+              <p className="text-sm text-muted-foreground">
+                Configurações de Yampi serão implementadas em breve
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Banco de Dados</CardTitle>
+            <CardDescription>
+              Configure as credenciais de acesso ao banco de dados
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted p-4 rounded-md">
+              <p className="text-sm text-muted-foreground">
+                Configurações de banco de dados serão implementadas em breve
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
