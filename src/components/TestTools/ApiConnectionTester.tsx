@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePixel, useGeolocation, useShopify } from '@/hooks';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { toast } from "sonner";
 
 export interface ApiConnectionTesterProps {
   pixelId?: string;
@@ -38,10 +39,13 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
     shopify: false
   });
 
-  // Inicializa hooks
-  const { testConnection: testPixel } = usePixel({ 
+  // Inicializa hooks com valores atualizados
+  const { testConnection: testPixel, updateConfig } = usePixel({ 
     pixelId: pixelId || '',
-    accessToken: pixelToken
+    accessToken: pixelToken || '',
+    apiVersion: 'v19.0',
+    enableServerSide: true,
+    enableBrowserSide: true
   });
   
   const { testConnection: testGeo } = useGeolocation({
@@ -59,57 +63,119 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
   // Testa conexão com Meta Pixel
   const handleTestPixel = async () => {
     if (!pixelId || !pixelToken) {
+      const errorMsg = "ID do Pixel e Token de acesso são necessários";
       setResults(prev => ({
         ...prev, 
-        pixel: { 
-          success: false, 
-          message: "ID do Pixel e Token de acesso são necessários" 
-        }
+        pixel: { success: false, message: errorMsg }
       }));
+      toast.error(errorMsg);
       return;
     }
     
     setTesting(prev => ({ ...prev, pixel: true }));
-    const result = await testPixel();
-    setResults(prev => ({ ...prev, pixel: result }));
-    setTesting(prev => ({ ...prev, pixel: false }));
+    console.log("Testando conexão do Meta Pixel em ApiConnectionTester:", { pixelId, pixelToken });
+    
+    try {
+      // Atualizando configuração antes do teste
+      updateConfig({
+        pixelId: pixelId || '',
+        accessToken: pixelToken || '',
+        apiVersion: 'v19.0',
+        enableServerSide: true,
+        enableBrowserSide: true
+      });
+      
+      const result = await testPixel();
+      console.log("Resultado do teste do Meta Pixel:", result);
+      
+      setResults(prev => ({ ...prev, pixel: result }));
+      
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message || "Erro ao conectar com o Meta Pixel");
+      }
+    } catch (error) {
+      console.error("Erro ao testar Meta Pixel:", error);
+      const errorMessage = `Erro: ${(error as Error).message}`;
+      setResults(prev => ({ 
+        ...prev, 
+        pixel: { success: false, message: errorMessage } 
+      }));
+      toast.error(errorMessage);
+    } finally {
+      setTesting(prev => ({ ...prev, pixel: false }));
+    }
   };
 
   // Testa conexão com Geolocalização
   const handleTestGeo = async () => {
     if (!geoAccountId || !geoLicenseKey) {
+      const errorMsg = "ID da Conta e Chave de Licença MaxMind são necessários";
       setResults(prev => ({
         ...prev, 
-        geo: { 
-          success: false, 
-          message: "ID da Conta e Chave de Licença MaxMind são necessários" 
-        }
+        geo: { success: false, message: errorMsg }
       }));
+      toast.error(errorMsg);
       return;
     }
     
     setTesting(prev => ({ ...prev, geo: true }));
-    const result = await testGeo();
-    setResults(prev => ({ ...prev, geo: result }));
-    setTesting(prev => ({ ...prev, geo: false }));
+    try {
+      const result = await testGeo();
+      setResults(prev => ({ ...prev, geo: result }));
+      
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message || "Erro ao conectar com a API de geolocalização");
+      }
+    } catch (error) {
+      console.error("Erro ao testar geolocalização:", error);
+      const errorMessage = `Erro: ${(error as Error).message}`;
+      setResults(prev => ({ 
+        ...prev, 
+        geo: { success: false, message: errorMessage } 
+      }));
+      toast.error(errorMessage);
+    } finally {
+      setTesting(prev => ({ ...prev, geo: false }));
+    }
   };
 
   // Verifica conexão com Shopify
   const handleCheckShopify = () => {
     setTesting(prev => ({ ...prev, shopify: true }));
     
-    setTimeout(() => {
+    try {
+      const resultMsg = shopifyConnected 
+        ? "Loja Shopify conectada com sucesso" 
+        : "Loja Shopify não conectada. Use o formulário de integração.";
+    
       setResults(prev => ({
         ...prev,
         shopify: {
           success: shopifyConnected,
-          message: shopifyConnected 
-            ? "Loja Shopify conectada com sucesso" 
-            : "Loja Shopify não conectada. Use o formulário de integração."
+          message: resultMsg
         }
       }));
+      
+      if (shopifyConnected) {
+        toast.success(resultMsg);
+      } else {
+        toast.warning(resultMsg);
+      }
+    } catch (error) {
+      console.error("Erro ao verificar conexão Shopify:", error);
+      const errorMessage = `Erro: ${(error as Error).message}`;
+      setResults(prev => ({ 
+        ...prev, 
+        shopify: { success: false, message: errorMessage } 
+      }));
+      toast.error(errorMessage);
+    } finally {
       setTesting(prev => ({ ...prev, shopify: false }));
-    }, 500);
+    }
   };
 
   return (
@@ -142,7 +208,7 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
               
               <Button 
                 onClick={handleTestPixel}
-                disabled={testing.pixel || !pixelId}
+                disabled={testing.pixel || !pixelId || !pixelToken}
                 size="sm"
               >
                 {testing.pixel ? (
@@ -176,7 +242,7 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
               
               <Button 
                 onClick={handleTestGeo}
-                disabled={testing.geo || !geoAccountId}
+                disabled={testing.geo || !geoAccountId || !geoLicenseKey}
                 size="sm"
               >
                 {testing.geo ? (

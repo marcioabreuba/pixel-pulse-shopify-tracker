@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 
 // Tipos para a API do Meta
@@ -42,6 +43,7 @@ export class MetaPixelService {
   private browserQueue: EventData[] = [];
 
   constructor(config: PixelConfig) {
+    console.log('Inicializando MetaPixelService com config:', config);
     this.config = config;
     
     if (config.enableBrowserSide) {
@@ -54,6 +56,7 @@ export class MetaPixelService {
     if (typeof window === 'undefined' || this.pixelInitialized) return;
 
     try {
+      console.log('Inicializando Pixel do Facebook no navegador com ID:', this.config.pixelId);
       // Adiciona o script do pixel
       (function(f: any, b, e, v, n, t, s) {
         if (f.fbq) return;
@@ -79,9 +82,11 @@ export class MetaPixelService {
 
       (window as any).fbq('init', this.config.pixelId);
       this.pixelInitialized = true;
+      console.log('Pixel do Facebook inicializado com sucesso');
 
       // Processa eventos em fila
       if (this.browserQueue.length > 0) {
+        console.log(`Processando ${this.browserQueue.length} eventos em fila`);
         this.browserQueue.forEach(event => {
           this.trackEventBrowser(event.event_name, event.custom_data || {});
         });
@@ -94,11 +99,13 @@ export class MetaPixelService {
 
   // Atualiza a configuração
   updateConfig(newConfig: Partial<PixelConfig>): void {
+    console.log('Atualizando configuração do Pixel:', newConfig);
     this.config = { ...this.config, ...newConfig };
     
     if (this.config.enableBrowserSide && !this.pixelInitialized) {
       this.initializePixel();
     }
+    console.log('Nova configuração do Pixel:', this.config);
   }
 
   // Rastreia evento no navegador (client-side)
@@ -107,6 +114,7 @@ export class MetaPixelService {
 
     if (!this.pixelInitialized) {
       // Adiciona à fila para processar depois da inicialização
+      console.log(`Adicionando evento ${eventName} à fila para processamento posterior`);
       this.browserQueue.push({
         event_name: eventName,
         event_time: Math.floor(Date.now() / 1000),
@@ -117,6 +125,7 @@ export class MetaPixelService {
     }
 
     try {
+      console.log(`Rastreando evento ${eventName} via navegador:`, customData);
       (window as any).fbq('track', eventName, customData);
     } catch (error) {
       console.error(`Erro ao rastrear evento ${eventName} pelo navegador:`, error);
@@ -126,28 +135,38 @@ export class MetaPixelService {
   // Rastreia evento via servidor (server-side)
   async trackEventServer(eventData: EventData): Promise<boolean> {
     if (!this.config.enableServerSide || !this.config.accessToken) {
+      console.log('Rastreamento via servidor desativado ou token não configurado');
       return false;
     }
 
     try {
       const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events`;
+      console.log(`Enviando evento ${eventData.event_name} para ${url}`);
+      
+      const body = {
+        data: [eventData],
+        access_token: this.config.accessToken,
+        test_event_code: process.env.NODE_ENV === 'development' ? 'TEST12345' : undefined
+      };
+      
+      console.log('Payload do evento:', JSON.stringify(body));
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          data: [eventData],
-          access_token: this.config.accessToken,
-        }),
+        body: JSON.stringify(body),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Erro na resposta da API do Meta:', errorData);
         throw new Error(errorData.error?.message || `Erro HTTP ${response.status}`);
       }
 
       const result = await response.json();
+      console.log('Resposta da API do Meta:', result);
       return result.events_received === 1;
     } catch (error) {
       console.error(`Erro ao enviar evento ${eventData.event_name} para Conversions API:`, error);
@@ -160,13 +179,17 @@ export class MetaPixelService {
     const eventTime = Math.floor(Date.now() / 1000);
     const eventId = `${this.config.pixelId}_${eventTime}_${Math.random().toString(36).substring(2, 10)}`;
     
+    console.log(`Iniciando rastreamento do evento ${eventName}`, { userData, customData });
+    
     // Rastreia no navegador
     if (this.config.enableBrowserSide) {
+      console.log('Rastreando evento no navegador');
       this.trackEventBrowser(eventName, customData);
     }
     
     // Rastreia no servidor
     if (this.config.enableServerSide) {
+      console.log('Rastreando evento no servidor');
       const eventData: EventData = {
         event_name: eventName,
         event_time: eventTime,
@@ -191,31 +214,65 @@ export class MetaPixelService {
 
   // Testa a conexão com a API do Meta
   async testConnection(): Promise<{ success: boolean, message: string }> {
-    if (!this.config.accessToken || !this.config.pixelId) {
+    console.log('Iniciando teste de conexão com Meta');
+    
+    if (!this.config.pixelId || this.config.pixelId === '') {
       return { 
         success: false, 
-        message: "Credenciais incompletas. Configure o ID do Pixel e o Token de Acesso." 
+        message: "ID do Pixel não configurado" 
       };
     }
+    
+    if (!this.config.accessToken || this.config.accessToken === '') {
+      return { 
+        success: false, 
+        message: "Token de acesso não configurado" 
+      };
+    }
+    
+    console.log('Testando conexão com configuração:', {
+      pixelId: this.config.pixelId,
+      accessToken: this.config.accessToken ? `${this.config.accessToken.substring(0, 5)}...` : 'não definido',
+      apiVersion: this.config.apiVersion
+    });
 
     try {
       const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}?access_token=${this.config.accessToken}`;
+      console.log(`Enviando requisição GET para: ${this.config.apiVersion}/${this.config.pixelId}`);
+      
       const response = await fetch(url);
+      console.log('Resposta recebida, status:', response.status);
+      
+      const responseData = await response.json();
+      console.log('Dados da resposta:', responseData);
       
       if (!response.ok) {
-        const errorData = await response.json();
+        if (responseData.error) {
+          console.error('Erro retornado pelo Meta:', responseData.error);
+          return { 
+            success: false, 
+            message: `Erro: ${responseData.error.message}` 
+          };
+        }
         return { 
           success: false, 
-          message: errorData.error?.message || `Erro HTTP ${response.status}` 
+          message: `Erro HTTP ${response.status}` 
         };
       }
       
-      const data = await response.json();
-      return { 
-        success: true, 
-        message: `Conexão bem-sucedida. Pixel '${data.name || data.id}' encontrado.` 
-      };
+      if (responseData.id) {
+        return { 
+          success: true, 
+          message: `Conexão bem-sucedida. Pixel '${responseData.name || responseData.id}' encontrado.` 
+        };
+      } else {
+        return {
+          success: false,
+          message: "Resposta recebida, mas não foi possível identificar o pixel."
+        };
+      }
     } catch (error) {
+      console.error('Erro ao testar conexão com Meta:', error);
       return { 
         success: false, 
         message: `Erro ao testar conexão: ${(error as Error).message}` 

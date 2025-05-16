@@ -29,20 +29,26 @@ export function usePixel(options: UsePixelOptions) {
 
   // Verifica a configuração inicial
   useEffect(() => {
-    if (options.pixelId) {
+    if (options.pixelId && options.pixelId !== '') {
       setIsConfigured(true);
+    } else {
+      setIsConfigured(false);
     }
   }, [options.pixelId]);
 
   // Atualiza a configuração do pixel
   const updateConfig = useCallback((newConfig: Partial<PixelConfig>) => {
-    pixelService.updateConfig(newConfig);
-    
-    if (newConfig.pixelId) {
-      setIsConfigured(true);
+    try {
+      console.log('Atualizando configurações do Pixel:', newConfig);
+      pixelService.updateConfig(newConfig);
+      
+      if (newConfig.pixelId && newConfig.pixelId !== '') {
+        setIsConfigured(true);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar configurações do Pixel:', error);
+      toast.error(`Erro ao atualizar configurações: ${(error as Error).message}`);
     }
-    
-    console.log('Configurações do Pixel atualizadas:', newConfig);
   }, [pixelService]);
 
   // Rastreia um evento
@@ -57,6 +63,7 @@ export function usePixel(options: UsePixelOptions) {
     }
 
     try {
+      console.log(`Rastreando evento ${eventName}`, { userData, customData });
       const success = await pixelService.trackEvent(eventName, userData, customData);
       
       if (success) {
@@ -83,22 +90,36 @@ export function usePixel(options: UsePixelOptions) {
     console.log('Testando conexão com o Meta Pixel...');
     console.log('Configuração atual:', pixelConfig);
     
+    if (!pixelConfig.pixelId || pixelConfig.pixelId === '') {
+      setIsTesting(false);
+      return { 
+        success: false, 
+        message: 'ID do Pixel não configurado' 
+      };
+    }
+    
+    if (!pixelConfig.accessToken || pixelConfig.accessToken === '') {
+      setIsTesting(false);
+      return { 
+        success: false, 
+        message: 'Token de acesso não configurado' 
+      };
+    }
+    
     try {
+      console.log('Enviando requisição de teste para o Meta...');
       const result = await pixelService.testConnection();
       console.log('Resultado do teste:', result);
       
       if (result.success) {
-        toast.success(result.message);
-      } else {
-        toast.error(result.message);
+        setIsConfigured(true);
       }
       
       return result;
     } catch (error) {
       console.error('Erro ao testar conexão:', error);
-      const message = `Erro ao testar conexão: ${(error as Error).message}`;
-      toast.error(message);
-      return { success: false, message };
+      const errorMessage = `Erro ao testar conexão: ${(error as Error).message}`;
+      return { success: false, message: errorMessage };
     } finally {
       setIsTesting(false);
     }

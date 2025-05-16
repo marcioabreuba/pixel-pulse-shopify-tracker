@@ -26,6 +26,9 @@ const Settings = () => {
   const [enableServerSide, setEnableServerSide] = useState(getCredential('FB_ENABLE_SERVER_SIDE') !== 'false');
   const [enableBrowserSide, setEnableBrowserSide] = useState(getCredential('FB_ENABLE_BROWSER_SIDE') !== 'false');
   
+  // Estado para armazenar o resultado do teste
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  
   // Initialize the pixel hook with current values
   const { testConnection, updateConfig } = usePixel({
     pixelId,
@@ -52,6 +55,7 @@ const Settings = () => {
 
   // Salvar credenciais do Meta
   const saveMetaCredentials = () => {
+    console.log("Salvando credenciais:", { pixelId, accessToken, apiVersion, enableServerSide, enableBrowserSide });
     const pixelSaved = saveCredential('FB_PIXEL_ID', pixelId);
     const tokenSaved = saveCredential('FB_ACCESS_TOKEN', accessToken);
     const versionSaved = saveCredential('FB_API_VERSION', apiVersion);
@@ -77,8 +81,13 @@ const Settings = () => {
   // Test pixel connection
   const handleTestConnection = async () => {
     setIsTesting(true);
+    setTestResult(null); // Limpa o resultado anterior
     
     try {
+      console.log("Testando conexão com o pixel. Configuração:", { 
+        pixelId, accessToken, apiVersion, enableServerSide, enableBrowserSide 
+      });
+      
       // Atualizando a configuração antes de testar
       updateConfig({
         pixelId,
@@ -89,13 +98,20 @@ const Settings = () => {
       });
       
       const result = await testConnection();
+      console.log("Resultado do teste de conexão:", result);
+      
+      setTestResult(result);  // Armazena o resultado do teste
+      
       if (result.success) {
         toast.success(result.message);
       } else {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error(`Erro ao testar conexão: ${(error as Error).message}`);
+      console.error("Erro ao testar conexão:", error);
+      const errorMessage = `Erro ao testar conexão: ${(error as Error).message}`;
+      setTestResult({ success: false, message: errorMessage });
+      toast.error(errorMessage);
     } finally {
       setIsTesting(false);
     }
@@ -296,6 +312,22 @@ const Settings = () => {
                       )}
                     </Button>
                   </div>
+                  
+                  {/* Exibição do resultado do teste */}
+                  {testResult && (
+                    <div className={`mt-4 p-3 rounded-md border ${testResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                      <div className="flex items-center gap-2">
+                        {testResult.success ? (
+                          <AlertCircle className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 text-red-600" />
+                        )}
+                        <span className={`text-sm ${testResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                          {testResult.message}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
