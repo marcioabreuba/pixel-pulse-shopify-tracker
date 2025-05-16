@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import GeolocationSetup from "@/components/Geolocation/GeolocationSetup";
@@ -78,7 +77,7 @@ const Settings = () => {
     }
   };
 
-  // Test pixel connection
+  // Test pixel connection - Método simplificado
   const handleTestConnection = async () => {
     setIsTesting(true);
     setTestResult(null); // Limpa o resultado anterior
@@ -100,7 +99,7 @@ const Settings = () => {
       const result = await testConnection();
       console.log("Resultado do teste de conexão:", result);
       
-      setTestResult(result);  // Armazena o resultado do teste
+      setTestResult(result);
       
       if (result.success) {
         toast.success(result.message);

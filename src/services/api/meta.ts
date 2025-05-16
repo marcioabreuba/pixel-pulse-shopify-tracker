@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Tipos para a API do Meta
@@ -252,9 +251,9 @@ export class MetaPixelService {
     return this.config.enableBrowserSide;
   }
 
-  // Testa a conexão com a API do Meta usando token do próprio pixel
+  // Testa a conexão apenas enviando um evento de teste para o endpoint /events
   async testConnection(): Promise<{ success: boolean, message: string }> {
-    console.log('Iniciando teste de conexão com Meta');
+    console.log('Iniciando teste de conexão simplificado com Meta Pixel');
     
     if (!this.config.pixelId || this.config.pixelId === '') {
       return { 
@@ -277,40 +276,11 @@ export class MetaPixelService {
     });
 
     try {
-      // Primeiro testamos o acesso direto ao pixel usando o token do próprio pixel
-      const pixelUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}`;
-      console.log(`Verificando acesso ao pixel: ${pixelUrl}`);
+      // Enviar um evento de teste diretamente para o endpoint /events
+      console.log('Enviando evento de teste para o endpoint /events...');
       
-      const pixelResponse = await fetch(`${pixelUrl}?access_token=${encodeURIComponent(this.config.accessToken)}`);
-      const pixelData = await pixelResponse.json();
-      
-      console.log('Resposta da verificação do pixel:', pixelData);
-      
-      if (pixelData.error) {
-        const errorCode = pixelData.error.code || 'Desconhecido';
-        const errorMsg = pixelData.error.message || 'Erro desconhecido';
-        
-        let mensagemDetalhe = '';
-        
-        // Mensagem mais específica para erro de permissão
-        if (errorCode === 100 || errorMsg.includes('permission')) {
-          mensagemDetalhe = ` Esse erro geralmente indica que o token usado não pertence ao pixel ${this.config.pixelId} ou não tem permissão para acessá-lo. Use o token gerado especificamente para este pixel, não um token de sistema ou usuário.`;
-        }
-        
-        console.error(`Erro ao verificar pixel: (${errorCode}) ${errorMsg}${mensagemDetalhe}`);
-        
-        return {
-          success: false,
-          message: `Erro (${errorCode}): ${errorMsg}.${mensagemDetalhe}`
-        };
-      }
-      
-      // Agora vamos tentar um evento de teste simplificado
-      console.log('Enviando evento de teste para validar a Conversions API...');
-      
-      // Evento de teste minimalista sem dados adicionais para evitar problemas de permissão
       const testEvent = {
-        event_name: "PageView",
+        event_name: "DiagnosticsTest",
         event_time: Math.floor(Date.now() / 1000),
         action_source: "website",
         event_id: `test_${Date.now()}`,
@@ -320,8 +290,10 @@ export class MetaPixelService {
       const testBody = {
         data: [testEvent],
         access_token: this.config.accessToken,
-        test_event_code: 'TEST12345'
+        test_event_code: 'TEST123'
       };
+      
+      console.log('Enviando requisição para:', testUrl);
       
       const testResponse = await fetch(testUrl, {
         method: 'POST',
@@ -332,33 +304,30 @@ export class MetaPixelService {
       const testResult = await testResponse.json();
       console.log('Resultado do evento de teste:', testResult);
       
-      if (testResult.error) {
-        const errorCode = testResult.error.code || 'Desconhecido';
-        const errorMsg = testResult.error.message || 'Erro desconhecido';
-        
-        let mensagemDetalhe = '';
-        
-        if (errorCode === 100) {
-          mensagemDetalhe = ` Esse erro geralmente ocorre quando você está usando um token que não tem permissão para enviar eventos. Para tokens de pixel, certifique-se de estar usando o token gerado especificamente para o pixel ${this.config.pixelId}.`;
-        }
-        
+      if (testResponse.ok && testResult.events_received > 0) {
         return {
-          success: false,
-          message: `Pixel encontrado, mas erro ao enviar evento: (${errorCode}) ${errorMsg}.${mensagemDetalhe}`
+          success: true,
+          message: `Conexão OK (Pixel + CAPI). ${testResult.events_received} evento(s) recebido(s).`
         };
       }
       
-      // Se chegou até aqui, tudo funcionou!
-      return {
-        success: true,
-        message: `Conexão estabelecida com sucesso! Pixel "${pixelData.name || this.config.pixelId}" está pronto para uso.`
-      };
+      if (testResult.error) {
+        const errorMsg = testResult.error.message || 'Erro desconhecido';
+        return {
+          success: false,
+          message: errorMsg
+        };
+      }
       
+      return {
+        success: false,
+        message: "Evento enviado, mas não foi recebido pelo Meta"
+      };
     } catch (error) {
       console.error('Erro ao testar conexão com Meta:', error);
       return { 
         success: false, 
-        message: `Erro de conexão: ${(error as Error).message}. Verifique sua conexão com a internet e tente novamente.` 
+        message: `${(error as Error).message}` 
       };
     }
   }
@@ -415,4 +384,3 @@ export class MetaPixelService {
 export function createMetaPixelService(config: PixelConfig): MetaPixelService {
   return new MetaPixelService(config);
 }
-

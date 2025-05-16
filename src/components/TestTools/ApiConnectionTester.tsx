@@ -73,7 +73,7 @@ const ApiConnectionTester: React.FC<ApiConnectionTesterProps> = ({
     }
   }, [pixelId, pixelToken, updateConfig]);
 
-  // Testa conexão com Meta Pixel
+  // Testa conexão com Meta Pixel - Versão simplificada
   const handleTestPixel = async () => {
     if (!pixelId || !pixelToken) {
       const errorMsg = "ID do Pixel e Token de acesso são necessários";
