@@ -4,7 +4,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import ApiConnectionTester from '@/components/TestTools/ApiConnectionTester';
-import EventTester from '@/components/TestTools/EventTester';
 import { useCredentials } from '@/hooks';
 import { toast } from "sonner";
 
@@ -57,9 +56,8 @@ const Developer = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-2">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="api">Teste de API</TabsTrigger>
-              <TabsTrigger value="events">Envio de Eventos</TabsTrigger>
               <TabsTrigger value="webhooks">Simulador de Webhooks</TabsTrigger>
             </TabsList>
             
@@ -71,13 +69,6 @@ const Developer = () => {
                 geoLicenseKey={storedCredentials.geoLicenseKey}
                 shopifyApiKey={storedCredentials.shopifyApiKey}
                 shopifyApiSecretKey={storedCredentials.shopifyApiSecretKey}
-              />
-            </TabsContent>
-            
-            <TabsContent value="events">
-              <EventTester
-                pixelId={storedCredentials.pixelId}
-                pixelToken={storedCredentials.pixelToken}
               />
             </TabsContent>
             
