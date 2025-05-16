@@ -25,7 +25,7 @@ export function usePixel(options: UsePixelOptions) {
   // Inicializa o serviço do Meta Pixel com a configuração inicial
   const pixelService = services.getMetaPixelService(currentConfig);
 
-  // Verifica a configuração inicial
+  // Verifica a configuração inicial e atualiza quando as opções mudam
   useEffect(() => {
     if (options.pixelId && String(options.pixelId).trim() !== '') {
       console.log('usePixel: ID do pixel definido:', options.pixelId);
@@ -46,9 +46,15 @@ export function usePixel(options: UsePixelOptions) {
     
     console.log('usePixel: Atualizando configuração com opções:', newConfig);
     setCurrentConfig(newConfig);
-    pixelService.updateConfig(newConfig);
     
-  }, [options.pixelId, options.accessToken, options.apiVersion, options.enableServerSide, options.enableBrowserSide, pixelService]);
+    // Certifique-se de atualizar o serviço com a nova configuração
+    try {
+      pixelService.updateConfig(newConfig);
+    } catch (error) {
+      console.error('Erro ao atualizar configuração do serviço Pixel:', error);
+    }
+    
+  }, [options.pixelId, options.accessToken, options.apiVersion, options.enableServerSide, options.enableBrowserSide]);
 
   // Atualiza a configuração do pixel
   const updateConfig = useCallback((newConfig: Partial<PixelConfig>) => {
@@ -127,24 +133,28 @@ export function usePixel(options: UsePixelOptions) {
       console.log('Enviando requisição de teste para o Meta...');
       
       // Garantir que estamos usando a configuração mais recente
-      pixelService.updateConfig(currentConfig);
+      const updatedService = services.getMetaPixelService(currentConfig);
       
-      const result = await pixelService.testConnection();
+      const result = await updatedService.testConnection();
       console.log('Resultado do teste:', result);
       
       if (result.success) {
         setIsConfigured(true);
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
       }
       
       return result;
     } catch (error) {
       console.error('Erro ao testar conexão:', error);
       const errorMessage = `Erro ao testar conexão: ${(error as Error).message}`;
+      toast.error(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setIsTesting(false);
     }
-  }, [currentConfig, pixelService]);
+  }, [currentConfig]);
 
   return {
     isConfigured,

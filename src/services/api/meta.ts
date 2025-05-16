@@ -143,13 +143,16 @@ export class MetaPixelService {
       const url = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events`;
       console.log(`Enviando evento ${eventData.event_name} para ${url}`);
       
+      // Sanitizar dados antes de enviar
+      const cleanEventData = this.sanitizeEventData(eventData);
+      
       const body = {
-        data: [eventData],
+        data: [cleanEventData],
         access_token: this.config.accessToken,
         test_event_code: process.env.NODE_ENV === 'development' ? 'TEST12345' : undefined
       };
       
-      console.log('Payload do evento:', JSON.stringify(body));
+      console.log('Payload do evento para API:', JSON.stringify(body));
       
       const response = await fetch(url, {
         method: 'POST',
@@ -172,6 +175,43 @@ export class MetaPixelService {
       console.error(`Erro ao enviar evento ${eventData.event_name} para Conversions API:`, error);
       return false;
     }
+  }
+
+  // Sanitiza dados de evento para evitar erros de parâmetro inválido
+  private sanitizeEventData(eventData: EventData): EventData {
+    const cleanData = { ...eventData };
+    
+    // Garantir que os campos de user_data estão no formato correto
+    if (cleanData.user_data) {
+      Object.keys(cleanData.user_data).forEach(key => {
+        const value = cleanData.user_data![key as keyof UserData];
+        if (typeof value === 'string' && value.trim() === '') {
+          delete cleanData.user_data![key as keyof UserData];
+        }
+      });
+      
+      // Se não houver dados de usuário, remover o objeto inteiro
+      if (Object.keys(cleanData.user_data).length === 0) {
+        delete cleanData.user_data;
+      }
+    }
+    
+    // Garantir que dados personalizados não contêm valores inválidos
+    if (cleanData.custom_data) {
+      Object.keys(cleanData.custom_data).forEach(key => {
+        const value = cleanData.custom_data![key];
+        if (value === undefined || value === null || value === '') {
+          delete cleanData.custom_data![key];
+        }
+      });
+      
+      // Se não houver dados personalizados, remover o objeto inteiro
+      if (Object.keys(cleanData.custom_data).length === 0) {
+        delete cleanData.custom_data;
+      }
+    }
+    
+    return cleanData;
   }
 
   // Rastreia evento em ambos (navegador + servidor)
@@ -237,97 +277,121 @@ export class MetaPixelService {
     });
 
     try {
-      // Abordagem alternativa para teste: diretamente buscar dados do pixel
-      console.log(`Usando URL para teste: graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}`);
+      // Método direto - verificar se o token tem permissão para o pixel
+      const debugTokenUrl = `https://graph.facebook.com/${this.config.apiVersion}/debug_token`;
+      const params = new URLSearchParams({
+        input_token: this.config.accessToken,
+        access_token: this.config.accessToken
+      });
       
-      const baseUrl = `https://graph.facebook.com/${this.config.apiVersion}/`;
+      console.log(`Verificando token: ${debugTokenUrl}`);
+      const tokenResponse = await fetch(`${debugTokenUrl}?${params}`);
+      const tokenData = await tokenResponse.json();
       
-      // Primeira abordagem: tentar obter detalhes do pixel
-      const pixelUrl = `${baseUrl}${this.config.pixelId}?access_token=${encodeURIComponent(this.config.accessToken)}`;
-      console.log(`Enviando requisição GET para verificar pixel`);
+      console.log('Resposta da verificação de token:', tokenData);
       
-      const response = await fetch(pixelUrl);
-      
-      if (!response.ok) {
-        // Se não conseguiu dados do pixel, tentar usando ads_management
-        console.log(`Primeira abordagem falhou (${response.status}), tentando segunda abordagem com ads_management`);
+      if (tokenData.error) {
+        const errorCode = tokenData.error.code || 'Desconhecido';
+        const errorMsg = tokenData.error.message || 'Erro desconhecido';
+        console.error(`Erro ao verificar token: (${errorCode}) ${errorMsg}`);
         
-        // Segunda abordagem: tentar enviar um evento de teste para o pixel
-        const testEventUrl = `${baseUrl}${this.config.pixelId}/events`;
-        const testBody = {
-          data: [{
-            event_name: "ViewContent",
-            event_time: Math.floor(Date.now() / 1000),
-            action_source: "website",
-            event_id: `test_${Date.now()}`,
-            user_data: {
-              client_user_agent: "Mozilla/5.0"
-            }
-          }],
-          access_token: this.config.accessToken,
-          test_event_code: "TEST12345"
+        return {
+          success: false,
+          message: `Erro (${errorCode}): ${errorMsg}`
         };
+      }
+      
+      // Verifica permissões - especialmente para eventos de conversão
+      if (tokenData.data) {
+        const permissions = tokenData.data.scopes || [];
+        console.log('Permissões do token:', permissions);
         
-        console.log(`Enviando evento de teste para verificar permissões`);
-        const testResponse = await fetch(testEventUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(testBody)
-        });
+        const requiredPermissions = ['ads_management', 'ads_read'];
+        const missingPermissions = requiredPermissions.filter(p => !permissions.includes(p));
         
-        const testData = await testResponse.json();
-        
-        if (testResponse.ok) {
-          console.log(`Evento de teste enviado com sucesso:`, testData);
-          return {
-            success: true,
-            message: `Conexão estabelecida com sucesso. Pixel ${this.config.pixelId} está funcional.`
-          };
-        } else {
-          console.error(`Erro no evento de teste:`, testData);
-          
-          // Extrair mensagem de erro mais detalhada
-          const errorMsg = testData.error?.message || `Erro HTTP ${testResponse.status}`;
-          const errorCode = testData.error?.code || 'Desconhecido';
-          
-          let mensagemDetalhada = `Erro (${errorCode}): ${errorMsg}`;
-          
-          // Sugestões baseadas em códigos de erro comuns
-          if (errorMsg.includes('Missing Permission')) {
-            mensagemDetalhada += `. Seu token de acesso não tem as permissões necessárias. Verifique se seu token tem as permissões 'ads_management' e 'business_management'.`;
-          } else if (errorCode === 190) {
-            mensagemDetalhada += `. O token de acesso é inválido ou expirou. Gere um novo token no Meta Business.`;
-          }
-          
+        if (missingPermissions.length > 0) {
           return {
             success: false,
-            message: mensagemDetalhada
+            message: `Token válido, mas faltam permissões necessárias: ${missingPermissions.join(', ')}. Verifique seu token no Business Manager do Facebook.`
           };
         }
       }
       
-      // Se a primeira abordagem funcionou
-      const pixelData = await response.json();
-      console.log(`Dados do pixel recebidos:`, pixelData);
+      // Verifica se o pixel existe e é acessível com este token
+      const pixelUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}`;
+      console.log(`Verificando pixel: ${pixelUrl}`);
       
-      if (pixelData.id) {
-        return {
-          success: true,
-          message: `Conexão bem-sucedida. Pixel '${pixelData.name || pixelData.id}' encontrado.`
-        };
-      } else {
+      const pixelResponse = await fetch(`${pixelUrl}?access_token=${encodeURIComponent(this.config.accessToken)}`);
+      const pixelData = await pixelResponse.json();
+      
+      console.log('Resposta da verificação do pixel:', pixelData);
+      
+      if (pixelData.error) {
+        const errorCode = pixelData.error.code || 'Desconhecido';
+        const errorMsg = pixelData.error.message || 'Erro desconhecido';
+        console.error(`Erro ao verificar pixel: (${errorCode}) ${errorMsg}`);
+        
+        let mensagemErro = `Erro (${errorCode}): ${errorMsg}`;
+        
+        // Sugestões específicas para erros comuns
+        if (errorMsg.includes('permissions')) {
+          mensagemErro += `. Seu token precisa das permissões 'ads_management' e 'business_management'. Verifique se o token tem acesso ao pixel ${this.config.pixelId}.`;
+        }
+        
         return {
           success: false,
-          message: "Resposta recebida, mas não foi possível identificar o pixel."
+          message: mensagemErro
         };
       }
+      
+      // Como último teste, tenta enviar um evento de teste simples
+      console.log('Enviando evento de teste para validar APIs de conversão...');
+      
+      // Evento de teste minimalista
+      const testEvent = {
+        event_name: "PageView",
+        event_time: Math.floor(Date.now() / 1000),
+        action_source: "website",
+        event_id: `test_${Date.now()}`,
+      };
+      
+      const testUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}/events`;
+      const testBody = {
+        data: [testEvent],
+        access_token: this.config.accessToken,
+        test_event_code: 'TEST12345'
+      };
+      
+      const testResponse = await fetch(testUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(testBody)
+      });
+      
+      const testResult = await testResponse.json();
+      console.log('Resultado do evento de teste:', testResult);
+      
+      if (testResult.error) {
+        const errorCode = testResult.error.code || 'Desconhecido';
+        const errorMsg = testResult.error.message || 'Erro desconhecido';
+        
+        return {
+          success: false,
+          message: `Pixel encontrado, mas erro ao enviar evento: (${errorCode}) ${errorMsg}. Verifique as permissões do token.`
+        };
+      }
+      
+      // Se chegou até aqui, tudo funcionou!
+      return {
+        success: true,
+        message: `Conexão estabelecida com sucesso! Pixel "${pixelData.name || this.config.pixelId}" está pronto para uso.`
+      };
+      
     } catch (error) {
       console.error('Erro ao testar conexão com Meta:', error);
       return { 
         success: false, 
-        message: `Erro ao testar conexão: ${(error as Error).message}` 
+        message: `Erro de conexão: ${(error as Error).message}. Verifique sua conexão com a internet e tente novamente.` 
       };
     }
   }
