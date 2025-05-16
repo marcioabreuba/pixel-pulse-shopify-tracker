@@ -277,50 +277,11 @@ export class MetaPixelService {
     });
 
     try {
-      // Método direto - verificar se o token tem permissão para o pixel
-      const debugTokenUrl = `https://graph.facebook.com/${this.config.apiVersion}/debug_token`;
-      const params = new URLSearchParams({
-        input_token: this.config.accessToken,
-        access_token: this.config.accessToken
-      });
-      
-      console.log(`Verificando token: ${debugTokenUrl}`);
-      const tokenResponse = await fetch(`${debugTokenUrl}?${params}`);
-      const tokenData = await tokenResponse.json();
-      
-      console.log('Resposta da verificação de token:', tokenData);
-      
-      if (tokenData.error) {
-        const errorCode = tokenData.error.code || 'Desconhecido';
-        const errorMsg = tokenData.error.message || 'Erro desconhecido';
-        console.error(`Erro ao verificar token: (${errorCode}) ${errorMsg}`);
-        
-        return {
-          success: false,
-          message: `Erro (${errorCode}): ${errorMsg}`
-        };
-      }
-      
-      // Verifica permissões - especialmente para eventos de conversão
-      if (tokenData.data) {
-        const permissions = tokenData.data.scopes || [];
-        console.log('Permissões do token:', permissions);
-        
-        const requiredPermissions = ['ads_management', 'ads_read'];
-        const missingPermissions = requiredPermissions.filter(p => !permissions.includes(p));
-        
-        if (missingPermissions.length > 0) {
-          return {
-            success: false,
-            message: `Token válido, mas faltam permissões necessárias: ${missingPermissions.join(', ')}. Verifique seu token no Business Manager do Facebook.`
-          };
-        }
-      }
-      
-      // Verifica se o pixel existe e é acessível com este token
+      // Método direto - verificar se podemos acessar o pixel
       const pixelUrl = `https://graph.facebook.com/${this.config.apiVersion}/${this.config.pixelId}`;
-      console.log(`Verificando pixel: ${pixelUrl}`);
+      console.log(`Verificando acesso ao pixel: ${pixelUrl}`);
       
+      // Tentando acessar o pixel com o token fornecido (token do próprio pixel)
       const pixelResponse = await fetch(`${pixelUrl}?access_token=${encodeURIComponent(this.config.accessToken)}`);
       const pixelData = await pixelResponse.json();
       
@@ -331,21 +292,14 @@ export class MetaPixelService {
         const errorMsg = pixelData.error.message || 'Erro desconhecido';
         console.error(`Erro ao verificar pixel: (${errorCode}) ${errorMsg}`);
         
-        let mensagemErro = `Erro (${errorCode}): ${errorMsg}`;
-        
-        // Sugestões específicas para erros comuns
-        if (errorMsg.includes('permissions')) {
-          mensagemErro += `. Seu token precisa das permissões 'ads_management' e 'business_management'. Verifique se o token tem acesso ao pixel ${this.config.pixelId}.`;
-        }
-        
         return {
           success: false,
-          message: mensagemErro
+          message: `Erro (${errorCode}): ${errorMsg}. Verifique se o token é válido para o pixel ${this.config.pixelId}.`
         };
       }
       
       // Como último teste, tenta enviar um evento de teste simples
-      console.log('Enviando evento de teste para validar APIs de conversão...');
+      console.log('Enviando evento de teste para validar a Conversions API...');
       
       // Evento de teste minimalista
       const testEvent = {
@@ -377,7 +331,7 @@ export class MetaPixelService {
         
         return {
           success: false,
-          message: `Pixel encontrado, mas erro ao enviar evento: (${errorCode}) ${errorMsg}. Verifique as permissões do token.`
+          message: `Pixel encontrado, mas erro ao enviar evento: (${errorCode}) ${errorMsg}.`
         };
       }
       

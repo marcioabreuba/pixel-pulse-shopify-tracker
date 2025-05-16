@@ -29,7 +29,9 @@ export const services = {
   // Meta Pixel service
   getMetaPixelService(config?: PixelConfig): MetaPixelService {
     if (config) {
-      // Sempre atualizamos ou criamos uma nova instância quando uma configuração é fornecida
+      // Para o Meta Pixel, sempre atualizamos ou criamos uma nova instância
+      // quando uma configuração é fornecida, por ser mais flexível e suportar
+      // diferentes tokens de acesso (tokens de pixel)
       if (metaPixelServiceInstance) {
         // Se já existe uma instância, apenas atualize a configuração
         console.log('Atualizando configuração do MetaPixelService existente:', config);
