@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -45,7 +44,7 @@ const EventTester: React.FC<EventTesterProps> = ({
   const pixelIdStr = pixelId ? String(pixelId) : '';
 
   const { trackEvent, prepareUserData } = usePixel({ 
-    pixelId: pixelIdStr,
+    pixelId: pixelIdStr,      // Here is line 66 where we're passing a string
     accessToken: pixelToken || '',
     enableServerSide: !!pixelToken,
     enableBrowserSide: !!pixelId

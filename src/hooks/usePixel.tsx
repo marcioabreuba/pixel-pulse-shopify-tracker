@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { services, PixelConfig, EventData, UserData } from '../services';
 import { toast } from 'sonner';
 
 export interface UsePixelOptions {
-  pixelId: string;
+  pixelId: string;      // Changed to string to match our usage in EventTester
   accessToken: string;
   apiVersion?: string;
   enableServerSide?: boolean;
