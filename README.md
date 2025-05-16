@@ -4,7 +4,81 @@
 
 **URL**: https://lovable.dev/projects/672d8676-259a-421f-ab12-9dd27fd34e88
 
-## How can I edit this code?
+## Como executar este projeto
+
+### Frontend e Backend
+
+Este projeto contém tanto o frontend React quanto um backend Node.js separado para processamento de eventos.
+
+```sh
+# Passo 1: Clone o repositório
+git clone <URL_DO_GIT>
+
+# Passo 2: Navegue até a pasta do projeto
+cd <NOME_DO_PROJETO>
+
+# Passo 3: Instale as dependências do frontend
+npm i
+
+# Passo 4: Configure as variáveis de ambiente do backend
+cp server/.env.example server/.env
+# Edite o arquivo server/.env com suas credenciais
+
+# Passo 5: Instale as dependências do backend
+cd server
+npm i
+cd ..
+
+# Passo 6: Execute o frontend
+npm run dev
+
+# Passo 7: Em outra janela de terminal, execute o backend
+cd server
+npm run dev
+```
+
+**Nota**: Para que o backend funcione corretamente, você precisa configurar:
+- Um servidor Redis (para uso do BullMQ)
+- Credenciais do Meta Pixel e Conversions API
+
+## Estrutura do projeto
+
+### Frontend (React + TypeScript)
+
+O frontend usa React, Tailwind CSS e shadcn-ui.
+
+### Backend (Node.js + TypeScript)
+
+O backend está na pasta `server/` e consiste em:
+
+- API Express para receber eventos
+- BullMQ para processamento assíncrono
+- Integração com Meta Conversions API
+- Validação com Zod
+- Filas para processamento resiliente
+
+## Como usar a API do backend
+
+### Verificação de saúde
+```
+GET /healthz
+```
+
+### Envio de eventos
+```
+POST /track
+{
+  "event_name": "ViewContent",
+  "value": 10.99,
+  "currency": "BRL",
+  "custom_data": {
+    "content_name": "Produto X",
+    "content_type": "product"
+  }
+}
+```
+
+## Como editar o código
 
 There are several ways of editing your application.
 
@@ -60,11 +134,11 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Como posso implantar este projeto?
 
 Simply open [Lovable](https://lovable.dev/projects/672d8676-259a-421f-ab12-9dd27fd34e88) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
+## Posso conectar um domínio personalizado ao meu projeto Lovable?
 
 Yes, you can!
 
